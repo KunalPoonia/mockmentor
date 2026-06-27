@@ -1,0 +1,10 @@
+# Core dependencies for MockMentor
+chromadb==0.4.22
+sentence-transformers==2.3.1
+streamlit==1.31.0
+pypdf==4.0.1
+ollama==0.1.6
+python-dotenv==1.0.1
+
+# Additional utilities
+numpy==1.26.3
