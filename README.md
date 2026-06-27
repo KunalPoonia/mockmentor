@@ -53,6 +53,16 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### Download Source Material
+
+**OSTEP (Operating Systems: Three Easy Pieces):**
+1. Download the full PDF from [pages.cs.wisc.edu/~remzi/OSTEP](https://pages.cs.wisc.edu/~remzi/OSTEP/)
+2. Place it at `data/raw/ostep.pdf`
+3. Verify: The PDF should have 675 pages
+
+**DSA Notes (optional, Week 3 extension):**
+- Place your own DSA notes/textbook PDFs in `data/raw/`
+
 ### Running the App
 
 ```bash
@@ -66,7 +76,7 @@ streamlit run src/app.py
 ```
 mockmentor/
 ├── data/
-│   └── raw/              # Source PDFs/notes
+│   └── raw/              # Source PDFs (download OSTEP, place here)
 ├── src/
 │   ├── ingest.py         # PDF → chunks
 │   ├── embed_store.py    # Chunks → ChromaDB
