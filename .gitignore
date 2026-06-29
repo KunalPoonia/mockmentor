@@ -53,3 +53,6 @@ htmlcov/
 
 # Source PDFs (download separately, see README)
 data/raw/*.pdf
+
+# Project planning documents
+MockMentor_Build_Roadmap.md
