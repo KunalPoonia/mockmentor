@@ -33,9 +33,9 @@ MockMentor is an AI-powered mock interview tool that:
 
 **Models now available:**
 ```
-llama3.1:8b   (4.9 GB) - Primary model for MockMentor
+qwen3:8b      (5.2 GB) - Primary model for MockMentor (hybrid thinking mode)
+llama3.1:8b   (4.9 GB) - Tested fallback (no <think> quirk)
 qwen2.5:7b    (4.7 GB) - Alternative (if needed)
-qwen3:8b      (5.2 GB) - Latest Qwen (just pulled)
 ```
 
 ---
@@ -294,30 +294,28 @@ Built for **Foundations of Applied Machine Learning** (Segment 3, Problem I2: Do
 
 ---
 
-## 🚀 Next Steps (Week 2 - Data Ingestion & Embedding)
+## 🚀 Next Steps (Week 1 - Data Layer)
 
-### **Step 2.1 - Extract & Chunk OSTEP Chapters**
-**Goal:** Convert 5 target chapters (~100 pages) into 512-token chunks with 64-token overlap.
+### **Step 2.1 - Extract & Chunk OSTEP Chapters** ✅ DONE (Jun 29)
+**Goal:** Convert 5 target chapters into overlapping text chunks tagged with metadata.
 
-**Implementation checklist:**
-- [ ] Write `src/ingest.py`:
-  - Page range extraction (e.g., pages 24-41 for Ch 2)
-  - Text cleaning (remove headers/footers, normalize whitespace)
-  - Chunking logic (512 tokens, 64 overlap)
-- [ ] Save chunks to `data/processed/chunks.json`
-- [ ] Verify chunk count (~200-300 chunks expected)
+**What was built:**
+- [x] `src/ingest.py`:
+  - Page-range extraction for all 5 chapters (0-indexed pypdf pages)
+  - Word-based chunking: ~400 words/chunk with 50-word overlap
+  - Each chunk tagged with `chapter_name` + `page_number` metadata
+  - `get_chunks()` returns the chunks in-memory (no JSON file — `embed_store.py` imports it directly)
+- [x] Verified: **79 chunks** (Intro 23, Scheduling 14, Address Spaces 10, Concurrency Intro 16, Concurrency Problems 16)
 
-**Testing criteria:**
+**Note on the spec change:** the original plan said "512 tokens / 64 overlap" saved to `chunks.json`. The actual build uses **word-based** chunking (~400 words / 50 overlap, matching the roadmap's 300-500 word target) and returns chunks **in-memory** rather than persisting JSON — simpler for a first pass and avoids a redundant on-disk format before embedding.
+
+**Actual chunk shape:**
 ```python
-# Expected output format:
-[
-  {
-    "chunk_id": "ch02_001",
+{
     "text": "Introduction to Operating Systems...",
-    "metadata": {"chapter": 2, "page_start": 24, "page_end": 25}
-  },
-  ...
-]
+    "chapter_name": "Introduction to OS",
+    "page_number": 23,
+}
 ```
 
 ---
@@ -348,18 +346,19 @@ results = collection.query(query_texts=[query], n_results=3)
 
 | Date | Milestone | Status |
 |------|-----------|--------|
-| Jan 27 | Install Ollama, pull llama3.1:8b | ✅ Done |
-| Jan 27 | GPU sanity check (75% GPU, 20 tok/s) | ✅ Done |
-| Jan 28 | Create project structure | ✅ Done |
-| Jan 28 | Set up Python venv + install deps | ✅ Done |
-| Jan 28 | Download & verify OSTEP PDF (675 pages) | ✅ Done |
-| Jan 28 | Git init, push to GitHub | ✅ Done |
-| Jan 28 | Fix commit message precision | ✅ Done |
-| Jan 28 | Remove PDF from repo, update .gitignore | ✅ Done |
-| Jan 29 | Remove roadmap from repo (keep local) | ✅ Done |
-| Jan 29 | Pull qwen3:8b (user request) | ✅ Done |
-| **Next** | **Extract & chunk OSTEP chapters** | ⏳ Pending |
-| **Next** | **Embed & store in ChromaDB** | ⏳ Pending |
+| Jun 26 | Install Ollama, pull llama3.1:8b | ✅ Done |
+| Jun 26 | GPU sanity check (75% GPU, 20 tok/s) | ✅ Done |
+| Jun 27 | Create project structure | ✅ Done |
+| Jun 27 | Set up Python venv + install deps | ✅ Done |
+| Jun 27 | Download & verify OSTEP PDF (675 pages) | ✅ Done |
+| Jun 27 | Git init, push to GitHub | ✅ Done |
+| Jun 27 | Fix commit message precision | ✅ Done |
+| Jun 27 | Remove PDF from repo, update .gitignore | ✅ Done |
+| Jun 27 | Remove roadmap from repo (keep local) | ✅ Done |
+| Jun 27 | Pull qwen3:8b, switch to it as primary | ✅ Done |
+| Jun 29 | Build & verify `ingest.py` (79 chunks, 5 chapters) | ✅ Done |
+| **Next** | **Embed & store chunks in ChromaDB** | ⏳ Pending |
+| **Next** | **Retrieval sanity check (Step 2.3)** | ⏳ Pending |
 
 ---
 
@@ -374,13 +373,13 @@ results = collection.query(query_texts=[query], n_results=3)
 - [x] README.md with installation and usage instructions
 - [x] .gitignore properly configured
 - [x] Clean git history (no bloat, clear commit messages)
-- [ ] Data ingestion pipeline (`src/ingest.py`)
+- [x] Data ingestion pipeline (`src/ingest.py`) — 79 chunks, verified
 - [ ] Embedding & storage pipeline (`src/embed_store.py`)
 - [ ] Retrieval logic (`src/retrieve.py`)
 - [ ] Grading logic (`src/evaluate.py`)
 - [ ] Streamlit UI (`src/app.py`)
 
-**Phase 1 completion:** 9/14 items (64%)  
+**Phase 1 completion:** 10/14 items (71%)  
 **Phase 2 readiness:** 100% (all prerequisites met)
 
 ---
@@ -410,4 +409,4 @@ results = collection.query(query_texts=[query], n_results=3)
 ---
 
 **End of Progress Summary**  
-*Ready to begin Step 2.1 (Data Ingestion) whenever you are.*
+*Step 2.1 (Data Ingestion) complete — ready to begin Step 2.2 (Embed & Store) whenever you are.*
