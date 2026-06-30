@@ -145,7 +145,7 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 
 ---
 
-## 🎯 Current Status: Step 2.1 Complete — Building the Data Layer
+## 🎯 Current Status: Step 2.2 Complete — Data Layer Nearly Done
 
 ### **What's Working:**
 ✅ Local LLM inference (Ollama + qwen3:8b, llama3.1:8b fallback)  
@@ -155,11 +155,12 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 ✅ OSTEP PDF downloaded and verified readable  
 ✅ Project structure and documentation complete  
 ✅ **`src/ingest.py` built & verified — 79 chunks across 5 chapters**  
+✅ **`src/embed_store.py` built & verified — 79 chunks embedded into ChromaDB (`ostep` collection)**  
 
-### **What's Next (Step 2.2 - Embed & Store):**
-⏳ Embed the 79 chunks with `all-MiniLM-L6-v2` (sentence-transformers)  
-⏳ Store embeddings + metadata in a ChromaDB collection  
-⏳ Then Step 2.3 — retrieval sanity check against the 5 chapters  
+### **What's Next (Step 2.3 - Retrieve):**
+⏳ Write `retrieve.py` — embed a question, query ChromaDB for top-k (k=3) chunks  
+⏳ Sanity check the 3 known questions each pull back the right chapter  
+⏳ That closes out Week 1's data layer (ingest → embed → retrieve)  
 
 ---
 
@@ -322,24 +323,23 @@ Built for **Foundations of Applied Machine Learning** (Segment 3, Problem I2: Do
 
 ---
 
-### **Step 2.2 - Embed & Store in ChromaDB**
+### **Step 2.2 - Embed & Store in ChromaDB** ✅ DONE (Jun 29)
 **Goal:** Convert text chunks → embeddings → store in ChromaDB for retrieval.
 
-**Implementation checklist:**
-- [ ] Write `src/embed_store.py`:
-  - Load `sentence-transformers` model (`all-MiniLM-L6-v2`)
-  - Generate embeddings for all chunks
-  - Initialize ChromaDB collection
-  - Store embeddings with metadata
-- [ ] Verify `chroma_db/` directory created
-- [ ] Test retrieval with sample query (e.g., "What is a process?")
+**What was built:**
+- [x] `src/embed_store.py`:
+  - Loads `all-MiniLM-L6-v2` via a ChromaDB `SentenceTransformerEmbeddingFunction`
+  - Embeds all 79 chunks and stores them with `chapter_name` + `page_number` metadata
+  - Persists to the `chroma_db/` folder in a collection named `ostep` (IDs `chunk_000`…`chunk_078`)
+  - `build_store()` deletes + recreates the collection each run (no duplicates); `get_collection()` is exposed for `retrieve.py` to reuse the same store + model
+- [x] Verified `chroma_db/` populated — `collection.count() == 79`
+- [x] Smoke test: query "What is a deadlock?" → all 3 top hits from the Concurrency Problems (Deadlocks) chapter (pp. 382/386/383) ✅
 
-**Testing criteria:**
+**Verified output:**
 ```python
-# Should retrieve relevant chunks:
-query = "What is a process?"
+query = "What is a deadlock?"
 results = collection.query(query_texts=[query], n_results=3)
-# Expected: chunks from Ch 2 (Intro to OS)
+# Top 3 → Concurrency Problems (Deadlocks), pages 382, 386, 383
 ```
 
 ---
@@ -359,8 +359,9 @@ results = collection.query(query_texts=[query], n_results=3)
 | Jun 27 | Remove roadmap from repo (keep local) | ✅ Done |
 | Jun 27 | Pull qwen3:8b, switch to it as primary | ✅ Done |
 | Jun 29 | Build & verify `ingest.py` (79 chunks, 5 chapters) | ✅ Done |
-| **Next** | **Embed & store chunks in ChromaDB** | ⏳ Pending |
-| **Next** | **Retrieval sanity check (Step 2.3)** | ⏳ Pending |
+| Jun 29 | Build & verify `embed_store.py` (79 chunks → ChromaDB) | ✅ Done |
+| **Next** | **Retrieval logic (`retrieve.py`, Step 2.3)** | ⏳ Pending |
+| **Next** | **Question bank + grading (Week 2)** | ⏳ Pending |
 
 ---
 
@@ -376,12 +377,12 @@ results = collection.query(query_texts=[query], n_results=3)
 - [x] .gitignore properly configured
 - [x] Clean git history (no bloat, clear commit messages)
 - [x] Data ingestion pipeline (`src/ingest.py`) — 79 chunks, verified
-- [ ] Embedding & storage pipeline (`src/embed_store.py`)
+- [x] Embedding & storage pipeline (`src/embed_store.py`) — 79 chunks in ChromaDB, verified
 - [ ] Retrieval logic (`src/retrieve.py`)
 - [ ] Grading logic (`src/evaluate.py`)
 - [ ] Streamlit UI (`src/app.py`)
 
-**Phase 1 completion:** 10/14 items (71%)  
+**Phase 1 completion:** 11/14 items (79%)  
 **Phase 2 readiness:** 100% (all prerequisites met)
 
 ---
@@ -411,4 +412,4 @@ results = collection.query(query_texts=[query], n_results=3)
 ---
 
 **End of Progress Summary**  
-*Step 2.1 (Data Ingestion) complete — ready to begin Step 2.2 (Embed & Store) whenever you are.*
+*Step 2.2 (Embed & Store) complete — ready to begin Step 2.3 (Retrieve) whenever you are.*
