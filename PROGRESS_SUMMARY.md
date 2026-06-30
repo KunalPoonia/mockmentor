@@ -1,5 +1,6 @@
 # MockMentor - Complete Progress Summary
-**Last Updated:** January 29, 2026
+it's a personal/supplementary log, not the official status doc
+**Last Updated:** June 29, 2026
 
 ---
 
@@ -144,20 +145,21 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 
 ---
 
-## 🎯 Current Status: Ready for Step 2
+## 🎯 Current Status: Step 2.1 Complete — Building the Data Layer
 
 ### **What's Working:**
-✅ Local LLM inference (Ollama + llama3.1:8b)  
+✅ Local LLM inference (Ollama + qwen3:8b, llama3.1:8b fallback)  
 ✅ GPU acceleration confirmed (~20 tok/s)  
 ✅ Python environment with all dependencies  
 ✅ Git repo initialized and pushed to GitHub  
 ✅ OSTEP PDF downloaded and verified readable  
 ✅ Project structure and documentation complete  
+✅ **`src/ingest.py` built & verified — 79 chunks across 5 chapters**  
 
-### **What's Next (Step 2.1 - Data Ingestion):**
-⏳ Extract target chapters from OSTEP PDF (5 chapters, ~100 pages)  
-⏳ Split text into chunks (512 tokens with 64-token overlap)  
-⏳ Save chunks to `data/processed/chunks.json`  
+### **What's Next (Step 2.2 - Embed & Store):**
+⏳ Embed the 79 chunks with `all-MiniLM-L6-v2` (sentence-transformers)  
+⏳ Store embeddings + metadata in a ChromaDB collection  
+⏳ Then Step 2.3 — retrieval sanity check against the 5 chapters  
 
 ---
 
@@ -169,11 +171,11 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 - Offline capability (no internet dependency)
 - Learning opportunity (understanding the full RAG stack)
 
-### **2. Why Llama 3.1 8B?**
-- Good balance of quality vs. resource usage
-- 8B parameters fit in consumer GPU memory
-- Q4_K_M quantization reduces size (4.9 GB vs. ~16 GB unquantized)
-- Strong instruction-following capability for grading/evaluation
+### **2. Why Qwen3 8B (switched from Llama 3.1 8B)?**
+- Started on `llama3.1:8b` — good quality/resource balance, 8B fits consumer GPU, Q4_K_M keeps it ~4.9 GB
+- **Switched to `qwen3:8b`** for the grading task: its hybrid "thinking mode" helps reason about partially-correct answers, and it ran faster on this hardware
+- `llama3.1:8b` kept as a tested fallback — no `<think>` tag quirk, so it's the safety net if Qwen3's output proves fussy to parse in `evaluate.py`
+- Both are Q4_K_M quantized (~4.9–5.2 GB), strong instruction-following for grading/evaluation
 
 ### **3. Why ChromaDB?**
 - Lightweight, embedded vector database
