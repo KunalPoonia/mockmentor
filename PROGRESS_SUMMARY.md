@@ -1,6 +1,6 @@
 # MockMentor - Complete Progress Summary
 it's a personal/supplementary log, not the official status doc
-**Last Updated:** June 29, 2026
+**Last Updated:** July 1, 2026
 
 ---
 
@@ -145,7 +145,7 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 
 ---
 
-## 🎯 Current Status: Step 2.2 Complete — Data Layer Nearly Done
+## 🎯 Current Status: Step 2.3 Complete — Data Layer Done ✅
 
 ### **What's Working:**
 ✅ Local LLM inference (Ollama + qwen3:8b, llama3.1:8b fallback)  
@@ -156,11 +156,14 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 ✅ Project structure and documentation complete  
 ✅ **`src/ingest.py` built & verified — 79 chunks across 5 chapters**  
 ✅ **`src/embed_store.py` built & verified — 79 chunks embedded into ChromaDB (`ostep` collection)**  
+✅ **`src/retrieve.py` built & verified — top-k (k=3) semantic retrieval, known questions hit the right chapter**  
 
-### **What's Next (Step 2.3 - Retrieve):**
-⏳ Write `retrieve.py` — embed a question, query ChromaDB for top-k (k=3) chunks  
-⏳ Sanity check the 3 known questions each pull back the right chapter  
-⏳ That closes out Week 1's data layer (ingest → embed → retrieve)  
+### **What's Next (Step 2.4 / Week 2 - Evaluate):**
+⏳ Write `evaluate.py` — feed retrieved chunks + student answer to `qwen3:8b` for RAG-grounded grading  
+⏳ Generate an adaptive follow-up question based on performance  
+⏳ Wire `ingest → embed → retrieve → evaluate` into `app.py` (Streamlit) for first end-to-end testing  
+
+**UI note:** for first testing and iteration we're using **Streamlit only** (`app.py`). The `stitch_mockmentor_liquid_glass_ui/` design mockups are parked for a later polish pass.  
 
 ---
 
@@ -344,6 +347,30 @@ results = collection.query(query_texts=[query], n_results=3)
 
 ---
 
+### **Step 2.3 - Retrieve Relevant Chunks** ✅ DONE (Jul 1)
+**Goal:** Given a question, pull the top-k OSTEP chunks it should be answered from.
+
+**What was built:**
+- [x] `src/retrieve.py`:
+  - `retrieve(question, k=3, collection=None)` — embeds the question and returns the top-k chunks as dicts (`text`, `chapter_name`, `page_number`, `distance`), best match first
+  - **Reuses `embed_store.get_collection()`** so the query embedding model is guaranteed identical to the storage model (no vector drift)
+  - Optional `collection` arg lets a long-running app (Streamlit) open the store once and reuse it across calls
+  - `python src/retrieve.py` runs a sanity check over 3 known questions
+- [x] Verified: known questions retrieve the correct chapter within the top-3
+
+**Sanity-check results:**
+```
+"which process to run next?"     -> Scheduling Intro appears in top-3 (Intro to OS ranks #1 — heavy semantic overlap)
+"virtual address space?"         -> Address Spaces (rank #1) ✅
+"why can two threads deadlock?"  -> Concurrency Problems / Deadlocks (rank #1) ✅
+SJF / round-robin / turnaround   -> Scheduling Intro ×3 (rank #1) ✅
+```
+**Note:** The one non-#1 case is a defensible near-miss — *"which process to run next"* overlaps with the Intro chapter (which introduces processes/running). Scheduling still lands in the top-3 (what grading consumes), and scheduling-specific phrasings rank it #1 cleanly. Retrieval mechanism confirmed sound.
+
+**Decision:** Kept flat imports (`from embed_store import ...`) to match `embed_store.py`'s own `from ingest import ...` style — resolves for `python src/retrieve.py` and `streamlit run src/app.py`, our testing path.
+
+---
+
 ## 📈 Progress Timeline
 
 | Date | Milestone | Status |
@@ -360,8 +387,9 @@ results = collection.query(query_texts=[query], n_results=3)
 | Jun 27 | Pull qwen3:8b, switch to it as primary | ✅ Done |
 | Jun 29 | Build & verify `ingest.py` (79 chunks, 5 chapters) | ✅ Done |
 | Jun 29 | Build & verify `embed_store.py` (79 chunks → ChromaDB) | ✅ Done |
-| **Next** | **Retrieval logic (`retrieve.py`, Step 2.3)** | ⏳ Pending |
-| **Next** | **Question bank + grading (Week 2)** | ⏳ Pending |
+| Jul 1 | Build & verify `retrieve.py` (top-k=3 retrieval) | ✅ Done |
+| **Next** | **RAG grading logic (`evaluate.py`, Step 2.4 / Week 2)** | ⏳ Pending |
+| **Next** | **Streamlit end-to-end wiring (`app.py`)** | ⏳ Pending |
 
 ---
 
@@ -378,11 +406,12 @@ results = collection.query(query_texts=[query], n_results=3)
 - [x] Clean git history (no bloat, clear commit messages)
 - [x] Data ingestion pipeline (`src/ingest.py`) — 79 chunks, verified
 - [x] Embedding & storage pipeline (`src/embed_store.py`) — 79 chunks in ChromaDB, verified
-- [ ] Retrieval logic (`src/retrieve.py`)
+- [x] Retrieval logic (`src/retrieve.py`) — top-k=3 semantic retrieval, verified
 - [ ] Grading logic (`src/evaluate.py`)
 - [ ] Streamlit UI (`src/app.py`)
 
-**Phase 1 completion:** 11/14 items (79%)  
+**Phase 1 completion:** 12/14 items (86%)  
+**Data layer (ingest → embed → retrieve):** ✅ Complete  
 **Phase 2 readiness:** 100% (all prerequisites met)
 
 ---
@@ -412,4 +441,4 @@ results = collection.query(query_texts=[query], n_results=3)
 ---
 
 **End of Progress Summary**  
-*Step 2.2 (Embed & Store) complete — ready to begin Step 2.3 (Retrieve) whenever you are.*
+*Step 2.3 (Retrieve) complete — data layer (ingest → embed → retrieve) done. Ready to begin Step 2.4 (Evaluate / RAG grading) whenever you are.*
