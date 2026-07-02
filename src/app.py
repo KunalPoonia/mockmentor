@@ -152,6 +152,11 @@ if result is not None:
     st.markdown("**Feedback**")
     st.write(result.get("explanation") or "_No explanation returned._")
 
+    model_answer = result.get("model_answer")
+    if model_answer:
+        st.markdown("**Model answer**")
+        st.info(model_answer)
+
     follow_up = result.get("follow_up_question")
     if follow_up:
         st.markdown("**Follow-up question**")

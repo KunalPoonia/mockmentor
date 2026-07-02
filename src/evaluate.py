@@ -47,7 +47,13 @@ TEMPERATURE = 0.2
 
 # The shape we ask the model to return. Keeping this in one place makes the
 # prompt and the parser agree on the exact keys.
-EXPECTED_KEYS = ("verdict", "score", "explanation", "follow_up_question")
+EXPECTED_KEYS = (
+    "verdict",
+    "score",
+    "explanation",
+    "model_answer",
+    "follow_up_question",
+)
 
 
 # --- Prompt construction ------------------------------------------------------
@@ -85,6 +91,9 @@ def build_messages(question, student_answer, chunks):
         '  "score": integer 0-5 (0 = no relevant content, 5 = complete & accurate)\n'
         '  "explanation": 1-3 sentences on what was right/wrong, citing the '
         "context (e.g. mention the chapter/page).\n"
+        '  "model_answer": a concise, correct answer to the question (2-4 '
+        "sentences), drawn ONLY from the context, showing the student what a "
+        "strong answer looks like.\n"
         '  "follow_up_question": one adaptive next question. If the answer was '
         "weak, probe the same concept more simply; if strong, go deeper or to a "
         "related idea. Must be answerable from the same context."
@@ -193,10 +202,11 @@ if __name__ == "__main__":
 
     result = grade_answer(question, student_answer)
 
-    print(f"Verdict:     {result['verdict']}")
-    print(f"Score:       {result['score']}/5")
-    print(f"Explanation: {result['explanation']}")
-    print(f"Follow-up:   {result['follow_up_question']}")
+    print(f"Verdict:      {result['verdict']}")
+    print(f"Score:        {result['score']}/5")
+    print(f"Explanation:  {result['explanation']}")
+    print(f"Model answer: {result['model_answer']}")
+    print(f"Follow-up:    {result['follow_up_question']}")
     print("Graded against:")
     for s in result["sources"]:
         print(f"  - {s['chapter_name']} (page {s['page_number']})")
