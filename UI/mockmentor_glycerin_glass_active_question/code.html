@@ -1,0 +1,299 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>MockMentor - Practice</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#c8c5cb",
+                        "secondary-container": "#47464b",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "surface-container-high": "#2a2a2a",
+                        "on-error": "#690005",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed-variant": "#474649",
+                        "outline": "#8e9192",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-primary-fixed-variant": "#454747",
+                        "error-container": "#93000a",
+                        "surface-container-low": "#1c1b1b",
+                        "inverse-surface": "#e5e2e1",
+                        "tertiary-fixed-dim": "#c8c6c8",
+                        "secondary-fixed": "#e4e1e7",
+                        "primary": "#ffffff",
+                        "primary-container": "#e2e2e2",
+                        "on-background": "#e5e2e1",
+                        "on-tertiary-fixed": "#1b1b1d",
+                        "primary-fixed": "#e2e2e2",
+                        "outline-variant": "#444748",
+                        "on-surface": "#e5e2e1",
+                        "on-secondary-container": "#b6b4b9",
+                        "surface-bright": "#3a3939",
+                        "surface-variant": "#353534",
+                        "on-tertiary": "#303032",
+                        "tertiary-fixed": "#e4e2e4",
+                        "surface": "#131313",
+                        "tertiary": "#ffffff",
+                        "on-primary-container": "#636565",
+                        "on-primary": "#2f3131",
+                        "secondary": "#c8c5cb",
+                        "on-secondary-fixed-variant": "#47464b",
+                        "surface-dim": "#131313",
+                        "on-surface-variant": "#c4c7c8",
+                        "inverse-on-surface": "#313030",
+                        "tertiary-container": "#e4e2e4",
+                        "on-primary-fixed": "#1a1c1c",
+                        "inverse-primary": "#5d5f5f",
+                        "surface-container-highest": "#353534",
+                        "surface-tint": "#c6c6c7",
+                        "on-tertiary-container": "#656466",
+                        "on-secondary-fixed": "#1b1b1f",
+                        "background": "#131313",
+                        "on-secondary": "#303034",
+                        "surface-container": "#201f1f",
+                        "on-error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-padding-mobile": "20px",
+                        "container-padding-desktop": "40px",
+                        "safe-area": "32px",
+                        "gutter": "24px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["13px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        
+        .liquid-glass {
+            background-color: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(255, 255, 255, 1);
+            border-left: 1px solid rgba(255, 255, 255, 1);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), inset 0 0 0 2px rgba(255, 255, 255, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.05);
+            border-radius: 48px;
+        }
+
+        .glass-input {
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+            outline: none;
+            border-bottom-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-button-secondary {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+        }
+
+        .glass-button-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .specular-highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 20%, rgba(255,255,255,0) 100%);
+            z-index: 10;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-md antialiased overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container relative" style="background-color: rgb(0, 0, 0);">
+<!-- Animated WebGL Background -->
+<div class="fixed inset-0 w-full h-full" style="display:block; z-index: 0;">
+<canvas id="shader-canvas-bg" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-bg');
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+varying vec2 v_texCoord;
+
+void main() {
+    // Center the UV coordinates
+    vec2 uv = v_texCoord - 0.5;
+    
+    // Calculate rotation angle (clockwise rotation)
+    float angle = -u_time * 0.5;
+    
+    // Calculate aspect ratio
+    float aspect = u_resolution.x / u_resolution.y;
+    
+    // Create an elliptical path that follows screen borders
+    vec2 light_origin = vec2(
+        cos(angle) * 0.85 * aspect,
+        sin(angle) * 0.85
+    );
+    
+    // For distance calculation, use anisotropic scaling
+    // Scale the distance measurement inversely to maintain consistent gradient size
+    vec2 uv_scaled = uv;
+    uv_scaled.x *= aspect;
+    
+    // Calculate anisotropic distance - compensate for aspect ratio stretching
+    vec2 diff = uv_scaled - light_origin;
+    // Scale the difference based on position - make horizontal distances "shorter" perceptually
+    diff.x /= aspect;
+    float d = length(diff);
+    
+    // Use consistent gradient size (reduced from 1.0 to 0.8)
+    float gradient = smoothstep(0.8, 0.0, d);
+    gradient = pow(gradient, 1.5);
+    
+    vec3 color_bg = vec3(0.0, 0.0, 0.0);
+    vec3 color_light = vec3(1.0, 1.0, 1.0);
+    
+    vec3 final_color = mix(color_bg, color_light, gradient);
+    
+    gl_FragColor = vec4(final_color, 1.0);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- TopNavBar component logic -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding-desktop py-4 bg-transparent backdrop-blur-xl bg-surface/70 border-b border-white/10 shadow-[0_40px_40px_rgba(0,0,0,0.4)] hidden md:flex">
+<div class="font-headline-md text-headline-md font-bold text-primary">MockMentor</div>
+<div class="flex gap-8">
+<a class="text-primary border-b-2 border-primary pb-1 font-body-md text-body-md hover:text-primary transition-colors duration-300 scale-95 transition-transform duration-200" href="#">Practice</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-300" href="#">History</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-300" href="#">Resources</a>
+</div>
+<div class="flex gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-300">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-300">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</nav>
+<!-- SideNavBar component logic (Mobile navigation fallback handling, typically hidden on task focus) -->
+<!-- Suppressed navigation shell for task-focused linear flow (as per guidelines for focus) - although the instruction above says it's a practice page, the prompt asks for a centered container with pure focus. We leave TopNav for desktop continuity but hide side/bottom for focus. -->
+<main class="flex-grow flex items-center justify-center p-container-padding-mobile md:p-container-padding-desktop z-10 relative pt-24 md:pt-32 pb-24"><div class="ambient-glow opacity-70" style="background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 80%); position: fixed; top: 10%; right: 10%; width: 40vw; height: 40vw; border-radius: 50%; pointer-events: none; z-index: 0; filter: blur(40px);"></div>
+<!-- Main Glass Container -->
+<div class="liquid-glass w-full max-w-[720px] p-8 md:p-12 relative overflow-hidden flex flex-col gap-8" style="border-radius: 48px; backdrop-filter: blur(4px); border-top: 1px solid rgba(255, 255, 255, 0.8); border-left: 1px solid rgba(255, 255, 255, 0.8); box-shadow: rgba(0, 0, 0, 0.6) 0px 40px 80px, rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(255, 255, 255, 0.05) 0px 0px 30px inset; background-color: rgba(255, 255, 255, 0.02);">
+<!-- Off-center highlight simulation built into liquid-glass class via borders, adding an extra dramatic line -->
+<div class="specular-highlight" style="background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255) 5%, rgb(255, 255, 255) 20%, rgba(255, 255, 255, 0.6) 40%, rgba(255, 255, 255, 0) 100%); height: 2px;" data-stitch-orig-opacity="1"></div>
+<!-- Header / Indicator -->
+<div class="flex items-center gap-3 text-secondary-fixed-dim font-label-sm text-label-sm uppercase tracking-wider">
+<span class="material-symbols-outlined text-[16px] opacity-70">terminal</span>
+<span class="">Operating Systems • Question 3</span>
+</div>
+<!-- Question Text -->
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary">
+                Explain how a multilevel feedback queue works and why it is useful.
+            </h1>
+<!-- Input Area -->
+<div class="relative mt-4">
+<textarea class="glass-input w-full min-h-[240px] rounded-xl p-6 text-on-surface font-body-lg text-body-lg resize-y placeholder:text-on-surface-variant/50" placeholder="Type your explanation here..."></textarea>
+<!-- Subtle internal glow container -->
+<div class="absolute inset-0 pointer-events-none rounded-xl border border-white/5 mix-blend-overlay shadow-[inset_0_0_20px_rgba(255,255,255,0.02)]"></div>
+</div>
+<!-- Action Area -->
+<div class="flex justify-end mt-4">
+<button class="bg-primary text-on-primary font-label-sm text-label-sm px-8 py-4 rounded-full hover:bg-primary-container transition-colors duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] flex items-center gap-2 group">
+                    Submit Answer
+                    <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
+</button>
+</div>
+</div>
+
+</main></body></html>

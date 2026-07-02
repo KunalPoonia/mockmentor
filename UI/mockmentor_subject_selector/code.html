@@ -1,0 +1,419 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>MockMentor - Subject Selection</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#c8c5cb",
+                        "secondary-container": "#47464b",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "surface-container-high": "#2a2a2a",
+                        "on-error": "#690005",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed-variant": "#474649",
+                        "outline": "#8e9192",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-primary-fixed-variant": "#454747",
+                        "error-container": "#93000a",
+                        "surface-container-low": "#1c1b1b",
+                        "inverse-surface": "#e5e2e1",
+                        "tertiary-fixed-dim": "#c8c6c8",
+                        "secondary-fixed": "#e4e1e7",
+                        "primary": "#ffffff",
+                        "primary-container": "#e2e2e2",
+                        "on-background": "#e5e2e1",
+                        "on-tertiary-fixed": "#1b1b1d",
+                        "primary-fixed": "#e2e2e2",
+                        "outline-variant": "#444748",
+                        "on-surface": "#e5e2e1",
+                        "on-secondary-container": "#b6b4b9",
+                        "surface-bright": "#3a3939",
+                        "surface-variant": "#353534",
+                        "on-tertiary": "#303032",
+                        "tertiary-fixed": "#e4e2e4",
+                        "surface": "#131313",
+                        "tertiary": "#ffffff",
+                        "on-primary-container": "#636565",
+                        "on-primary": "#2f3131",
+                        "secondary": "#c8c5cb",
+                        "on-secondary-fixed-variant": "#47464b",
+                        "surface-dim": "#131313",
+                        "on-surface-variant": "#c4c7c8",
+                        "inverse-on-surface": "#313030",
+                        "tertiary-container": "#e4e2e4",
+                        "on-primary-fixed": "#1a1c1c",
+                        "inverse-primary": "#5d5f5f",
+                        "surface-container-highest": "#353534",
+                        "surface-tint": "#c6c6c7",
+                        "on-tertiary-container": "#656466",
+                        "on-secondary-fixed": "#1b1b1f",
+                        "background": "#131313",
+                        "on-secondary": "#303034",
+                        "surface-container": "#201f1f",
+                        "on-error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-padding-mobile": "20px",
+                        "container-padding-desktop": "40px",
+                        "safe-area": "32px",
+                        "gutter": "24px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["13px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #000;
+            min-height: 100vh;
+            color: #e5e2e1;
+            overflow-x: hidden;
+        }
+        
+        .liquid-glass {
+            background-color: rgba(42, 42, 46, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card {
+            background-color: rgba(42, 42, 46, 0.3);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .glass-card:hover, .glass-card.active {
+            background-color: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-card.active {
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .primary-btn {
+            background-color: #ffffff;
+            color: #131313;
+            box-shadow: 0 10px 25px -5px rgba(255, 255, 255, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+
+        .primary-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 35px -5px rgba(255, 255, 255, 0.4), inset 0 -2px 0 rgba(0,0,0,0.1);
+        }
+
+        .glass-link-btn {
+            background-color: transparent;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .glass-link-btn:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .ambient-glow {
+            position: fixed;
+            top: 10%;
+            right: 10%;
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(40px);
+        }
+
+        .input-well {
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .input-well:focus-within {
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-white/20 selection:text-white">
+<!-- Animated WebGL Background -->
+<div class="fixed inset-0 w-full h-full" style="display:block; z-index: 0;">
+<canvas id="shader-canvas-bg" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-bg');
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+varying vec2 v_texCoord;
+
+void main() {
+    // Center the UV coordinates
+    vec2 uv = v_texCoord - 0.5;
+    
+    // Calculate rotation angle (clockwise rotation)
+    float angle = -u_time * 0.5;
+    
+    // Calculate aspect ratio
+    float aspect = u_resolution.x / u_resolution.y;
+    
+    // Create an elliptical path that follows screen borders
+    vec2 light_origin = vec2(
+        cos(angle) * 0.85 * aspect,
+        sin(angle) * 0.85
+    );
+    
+    // For distance calculation, use anisotropic scaling
+    // Scale the distance measurement inversely to maintain consistent gradient size
+    vec2 uv_scaled = uv;
+    uv_scaled.x *= aspect;
+    
+    // Calculate anisotropic distance - compensate for aspect ratio stretching
+    vec2 diff = uv_scaled - light_origin;
+    // Scale the difference based on position - make horizontal distances "shorter" perceptually
+    diff.x /= aspect;
+    float d = length(diff);
+    
+    // Use consistent gradient size (reduced from 1.0 to 0.8)
+    float gradient = smoothstep(0.8, 0.0, d);
+    gradient = pow(gradient, 1.5);
+    
+    vec3 color_bg = vec3(0.0, 0.0, 0.0);
+    vec3 color_light = vec3(1.0, 1.0, 1.0);
+    
+    vec3 final_color = mix(color_bg, color_light, gradient);
+    
+    gl_FragColor = vec4(final_color, 1.0);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding-mobile md:px-container-padding-desktop py-4 backdrop-blur-xl bg-surface/70 border-b border-white/10 shadow-[0_40px_40px_rgba(0,0,0,0.4)]">
+<div class="font-headline-md text-headline-md font-bold text-primary">
+            MockMentor
+        </div>
+<div class="hidden md:flex gap-8 items-center">
+<a class="text-primary border-b-2 border-primary pb-1 font-label-sm text-label-sm transition-transform duration-200 scale-95" href="#">Practice</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-300" href="#">History</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-300" href="#">Resources</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-primary dark:text-primary hover:text-primary transition-colors duration-300">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="text-primary dark:text-primary hover:text-primary transition-colors duration-300">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="relative z-10 flex flex-col items-center justify-center min-h-screen pt-safe-area px-container-padding-mobile pb-24">
+<div class="ambient-glow"></div>
+<div class="liquid-glass w-full max-w-[720px] rounded-[40px] p-8 md:p-12 flex flex-col gap-10 mt-16 relative overflow-hidden" style="background-color: rgba(255, 255, 255, 0.02); backdrop-filter: blur(4px); border-top: 2px solid rgba(255, 255, 255, 0.9); border-left: 1.5px solid rgba(255, 255, 255, 0.6); box-shadow: rgba(0, 0, 0, 0.6) 0px 40px 80px, rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(255, 255, 255, 0.3) 0px 2px 4px inset; border-radius: 48px;">
+<!-- Subtle internal highlight -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+<div class="text-center z-10">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-4 tracking-tight">Choose Your Subject</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto">Select a knowledge domain to begin your mock interview session.</p>
+</div>
+<!-- Subject Selector Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 z-10">
+<button class="glass-card active rounded-2xl p-6 flex flex-col gap-4 text-left group" style="background-color: rgba(255, 255, 255, 0.05); backdrop-filter: blur(4px); border-top: 2px solid rgba(255, 255, 255, 0.8); border-left: 1.5px solid rgba(255, 255, 255, 0.5); box-shadow: rgba(255, 255, 255, 0.3) 1px 1px 3px inset, rgba(0, 0, 0, 0.4) -1px -1px 4px inset, rgba(0, 0, 0, 0.5) 0px 20px 40px;">
+<div class="flex items-center justify-between w-full">
+<span class="material-symbols-outlined text-primary text-3xl group-hover:scale-110 transition-transform">terminal</span>
+<div class="w-3 h-3 rounded-full bg-white/20 shadow-[0_0_8px_rgba(255,255,255,0.4)]"></div>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Operating Systems</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Concurrency, Memory, Kernels</p>
+</div>
+</button>
+<button class="glass-card rounded-2xl p-6 flex flex-col gap-4 text-left group" style="background-color: rgba(255, 255, 255, 0.02); backdrop-filter: blur(4px); border-top: 1.5px solid rgba(255, 255, 255, 0.5); border-left: 1.5px solid rgba(255, 255, 255, 0.3); box-shadow: rgba(255, 255, 255, 0.1) 1px 1px 3px inset, rgba(0, 0, 0, 0.4) -1px -1px 4px inset, rgba(0, 0, 0, 0.4) 0px 20px 40px;">
+<div class="flex items-center justify-between w-full">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-3xl group-hover:scale-110 transition-all">account_tree</span>
+<div class="w-3 h-3 rounded-full border border-white/20"></div>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Data Structures</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Trees, Graphs, Hash Maps</p>
+</div>
+</button>
+<button class="glass-card rounded-2xl p-6 flex flex-col gap-4 text-left group" style="background-color: rgba(255, 255, 255, 0.02); backdrop-filter: blur(4px); border-top: 1.5px solid rgba(255, 255, 255, 0.5); border-left: 1.5px solid rgba(255, 255, 255, 0.3); box-shadow: rgba(255, 255, 255, 0.1) 1px 1px 3px inset, rgba(0, 0, 0, 0.4) -1px -1px 4px inset, rgba(0, 0, 0, 0.4) 0px 20px 40px;">
+<div class="flex items-center justify-between w-full">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-3xl group-hover:scale-110 transition-all">dns</span>
+<div class="w-3 h-3 rounded-full border border-white/20"></div>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">System Design</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Scale, Microservices, DBs</p>
+</div>
+</button>
+<button class="glass-card rounded-2xl p-6 flex flex-col gap-4 text-left group" style="background-color: rgba(255, 255, 255, 0.02); backdrop-filter: blur(4px); border-top: 1.5px solid rgba(255, 255, 255, 0.5); border-left: 1.5px solid rgba(255, 255, 255, 0.3); box-shadow: rgba(255, 255, 255, 0.1) 1px 1px 3px inset, rgba(0, 0, 0, 0.4) -1px -1px 4px inset, rgba(0, 0, 0, 0.4) 0px 20px 40px;">
+<div class="flex items-center justify-between w-full">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-3xl group-hover:scale-110 transition-all">code</span>
+<div class="w-3 h-3 rounded-full border border-white/20"></div>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Algorithms</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">DP, Sorting, Search</p>
+</div>
+</button>
+</div>
+<!-- Configuration Options -->
+<div class="z-10 bg-surface/30 rounded-2xl p-6 border border-white/5 flex flex-col gap-6">
+<div class="flex flex-col sm:flex-row gap-6 justify-between items-start sm:items-center">
+<div>
+<h4 class="font-label-sm text-label-sm text-primary mb-1">Difficulty Level</h4>
+<p class="font-label-sm text-label-sm text-on-surface-variant opacity-70">Adjust the strictness of the interviewer.</p>
+</div>
+<div class="flex gap-2 bg-black/40 p-1 rounded-full border border-white/10" style="background-color: rgba(255, 255, 255, 0.02); backdrop-filter: blur(4px); border-top: 1.5px solid rgba(255, 255, 255, 0.4); border-left: 1px solid rgba(255, 255, 255, 0.2); box-shadow: rgba(255, 255, 255, 0.1) 0px 1px 0px inset;">
+<button class="px-4 py-1.5 rounded-full font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors">Mid</button>
+<button class="px-4 py-1.5 rounded-full font-label-sm text-label-sm bg-white text-black font-medium shadow-[0_2px_10px_rgba(255,255,255,0.2)]">Senior</button>
+<button class="px-4 py-1.5 rounded-full font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors">Staff</button>
+</div>
+</div>
+</div>
+<!-- Action Area -->
+<div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4 z-10">
+<button class="glass-link-btn font-label-sm text-label-sm text-primary rounded-full px-8 py-4 w-full sm:w-auto">
+                    Configure More
+                </button>
+<button class="primary-btn font-label-sm text-label-sm font-semibold rounded-full px-10 py-4 w-full sm:w-auto flex items-center justify-center gap-2 group">
+<span class="">Start Session</span>
+<span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Script for subtle interactive highlights (vanilla js) -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.glass-card');
+            
+            cards.forEach(card => {
+                card.addEventListener('click', function() {
+                    // Remove active from all
+                    cards.forEach(c => {
+                        c.classList.remove('active');
+                        const indicator = c.querySelector('.w-3');
+                        indicator.classList.remove('bg-white/20', 'shadow-[0_0_8px_rgba(255,255,255,0.4)]');
+                        indicator.classList.add('border', 'border-white/20');
+                        c.querySelector('.material-symbols-outlined').classList.remove('text-primary');
+                        c.querySelector('.material-symbols-outlined').classList.add('text-on-surface-variant');
+                    });
+                    
+                    // Add active to clicked
+                    this.classList.add('active');
+                    const indicator = this.querySelector('.w-3');
+                    indicator.classList.remove('border', 'border-white/20');
+                    indicator.classList.add('bg-white/20', 'shadow-[0_0_8px_rgba(255,255,255,0.4)]');
+                    this.querySelector('.material-symbols-outlined').classList.remove('text-on-surface-variant');
+                    this.querySelector('.material-symbols-outlined').classList.add('text-primary');
+                });
+            });
+        });
+    </script>
+
+
+</body></html>

@@ -38,7 +38,10 @@ User Question
 [Local LLM Grading] ──(Qwen3 8B via Ollama)
      │
      ▼
-Verdict + Explanation + Adaptive Follow-up Question
+Verdict + Score + Explanation + Model Answer + Sources + Adaptive Follow-up
+     │
+     ▼
+[UI] ──(Flask web app at :5000, or Streamlit for testing)
 ```
 
 ---
@@ -51,7 +54,8 @@ Verdict + Explanation + Adaptive Follow-up Question
 | Vector store | ChromaDB | Simple local setup, persists to disk, integrates cleanly with local embeddings |
 | LLM (grading + follow-up) | Qwen3 8B, via Ollama | Fully local — zero ongoing cost, offline-capable, fits within 6GB VRAM (RTX 4050) at acceptable speed (~20 tok/s); fallback: Llama 3.1 8B |
 | PDF parsing | `pypdf` | Lightweight, sufficient for text-based academic PDFs |
-| UI | Streamlit | Fastest path to a working interactive app for a 5-week timeline |
+| UI (main) | Flask + static single-page app (liquid-glass design) | Serves the polished interview UI and exposes the RAG pipeline over a small JSON API (`/api/question`, `/api/grade`); no browser framework needed |
+| UI (testing) | Streamlit | Fastest path to a working interactive app for quick pipeline iteration |
 | Corpus (Subject #1) | *Operating Systems: Three Easy Pieces* (OSTEP), 5 selected chapters | Free, well-structured, long-form explanatory text — well-suited to RAG retrieval; widely used in CS coursework |
 
 Full reasoning for the local-vs-API and model-selection decisions is documented in [ADRs](#8-architecture-decision-records-adrs) (in progress).
@@ -103,11 +107,26 @@ See `data/raw/README.md` for exact instructions.
 > ```
 > Your prompt should now show `(venv)`. (Or skip activation and call the venv copy directly, e.g. `venv\Scripts\streamlit run src/app.py`.)
 
-**Full app (mock interview UI):**
+> **Both UIs require Ollama running with `qwen3:8b` and a built `chroma_db/`.** If you haven't embedded the corpus yet, run `python src/embed_store.py` once first (see the data-layer scripts below).
+
+**Web app — the main interface (Flask + liquid-glass UI):**
+```bash
+python src/server.py
+```
+Then open **http://localhost:5000**. This is the primary front end: a single-page app that walks you through the full flow —
+
+1. **Choose Your Subject** (home page) — Operating Systems is live; other subjects show as *Coming soon*.
+2. **Question** — a question from the OSTEP-backed bank (10 per session); type your answer.
+3. **Grading** — an animated state while `qwen3:8b` evaluates your response.
+4. **Verdict** — colour-coded verdict + score, feedback, a **model answer**, the OSTEP **sources** the grade was based on, and an adaptive **follow-up** you can answer to continue the session.
+
+Under the hood the server reuses the same pipeline as everything else: `GET /api/question` serves questions from `src/questions.py`, and `POST /api/grade` runs `retrieve.py` → `evaluate.py`. The ChromaDB collection is opened once at startup and shared across requests. If Ollama isn't running, the UI shows a clear message instead of failing silently.
+
+**Streamlit app — lightweight testing UI:**
 ```bash
 streamlit run src/app.py
 ```
-Launches the Streamlit interface: pick a chapter + question, type an answer, and get a RAG-grounded grade (verdict, score, feedback), an adaptive follow-up question, and the OSTEP sources the grade was based on. **Requires Ollama running with `qwen3:8b` and a built `chroma_db/`** (run `python src/embed_store.py` once first).
+A simpler interface for quick iteration on the pipeline: pick a chapter + question, submit an answer, and see the same RAG-grounded grade (verdict, score, feedback, model answer, follow-up, sources). Handy when you want to test grading changes without the full web front end.
 
 **Data-layer scripts (run individually to verify each stage):**
 ```bash

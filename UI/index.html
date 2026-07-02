@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>MockMentor</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">try{
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container-high": "#2a2a2a",
+            "surface-container": "#201f1f",
+            "primary": "#ffffff",
+            "primary-container": "#e2e2e2",
+            "on-primary": "#2f3131",
+            "on-background": "#e5e2e1",
+            "on-surface": "#e5e2e1",
+            "on-surface-variant": "#c4c7c8",
+            "secondary": "#c8c5cb",
+            "secondary-fixed-dim": "#c8c5cb",
+            "surface-bright": "#3a3939",
+            "surface": "#131313",
+            "background": "#131313",
+            "outline-variant": "#444748"
+          },
+          "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+          "spacing": {
+            "container-padding-mobile": "20px",
+            "container-padding-desktop": "40px",
+            "safe-area": "32px", "gutter": "24px", "unit": "8px"
+          },
+          "fontFamily": {
+            "label-sm": ["Inter"], "display-lg-mobile": ["Inter"], "headline-md": ["Inter"],
+            "body-lg": ["Inter"], "display-lg": ["Inter"], "body-md": ["Inter"]
+          },
+          "fontSize": {
+            "label-sm": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+            "display-lg-mobile": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+            "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+            "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+            "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+            "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}]
+          }
+        }
+      }
+    }
+}catch(_e){}</script>
+<style>
+    /* ============ Shared design system (merged from the 4 mockups) ============ */
+    body { background-color: #000; min-height: 100vh; color: #e5e2e1; overflow-x: hidden; font-family: 'Inter', sans-serif; }
+
+    /* --- Glass surfaces --- */
+    .liquid-glass {
+        background-color: rgba(42, 42, 46, 0.4);
+        backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    .glass-card {
+        background-color: rgba(42, 42, 46, 0.3);
+        backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-left: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .glass-card:not(.disabled):hover, .glass-card.active {
+        background-color: rgba(255, 255, 255, 0.08);
+        transform: translateY(-2px);
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .glass-card.active { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 20px 40px -10px rgba(0, 0, 0, 0.5); }
+    .glass-card.disabled { opacity: 0.45; cursor: not-allowed; }
+    .glass-well {
+        backdrop-filter: blur(4px);
+        background-color: rgba(255, 255, 255, 0.02);
+        border-top: 1px solid rgba(255, 255, 255, 0.4);
+        border-left: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: inset 0 4px 12px rgba(0,0,0,0.3), inset 0 0 20px rgba(255,255,255,0.1);
+    }
+    .glass-slab {
+        background: rgba(42, 42, 46, 0.7);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        border-left: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
+        position: relative; overflow: hidden;
+    }
+
+    /* --- Buttons --- */
+    .primary-btn {
+        background-color: #ffffff; color: #131313;
+        box-shadow: 0 10px 25px -5px rgba(255, 255, 255, 0.3), inset 0 -2px 0 rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+    }
+    .primary-btn:hover { transform: scale(1.02); box-shadow: 0 15px 35px -5px rgba(255, 255, 255, 0.4), inset 0 -2px 0 rgba(0,0,0,0.1); }
+    .primary-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .glass-link-btn {
+        background-color: transparent; backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-top-color: rgba(255, 255, 255, 0.2);
+        border-left-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: all 0.2s ease;
+    }
+    .glass-link-btn:hover { background-color: rgba(255, 255, 255, 0.05); border-top-color: rgba(255, 255, 255, 0.3); }
+    .glass-btn-primary {
+        background-color: #ffffff; color: #111; border: 1px solid rgba(255,255,255,0.8);
+        box-shadow: 0 2px 20px rgba(255,255,255,0.25); transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .glass-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(255,255,255,0.4); }
+    .glass-btn-secondary {
+        background-color: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.2);
+        backdrop-filter: blur(8px); transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .glass-btn-secondary:hover { transform: translateY(-2px); background-color: rgba(255,255,255,0.08); }
+
+    /* --- Inputs --- */
+    .glass-input {
+        background-color: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        transition: all 0.3s ease;
+    }
+    .glass-input:focus { outline: none; border-color: rgba(255, 255, 255, 0.25); box-shadow: 0 0 15px rgba(255, 255, 255, 0.05); background-color: rgba(0, 0, 0, 0.6); }
+
+    /* --- Verdict chips --- */
+    .verdict-chip-amber { background-color: rgba(255,179,0,0.12); border: 1px solid rgba(255,179,0,0.4); color: #ffca28; box-shadow: 0 0 20px rgba(255,179,0,0.15), inset 0 0 12px rgba(255,179,0,0.1); }
+    .verdict-chip-green { background-color: rgba(76,175,80,0.12); border: 1px solid rgba(76,175,80,0.4); color: #81c784; box-shadow: 0 0 20px rgba(76,175,80,0.15), inset 0 0 12px rgba(76,175,80,0.1); }
+    .verdict-chip-red { background-color: rgba(244,67,54,0.12); border: 1px solid rgba(244,67,54,0.4); color: #e57373; box-shadow: 0 0 20px rgba(244,67,54,0.15), inset 0 0 12px rgba(244,67,54,0.1); }
+
+    /* --- Ambient / effects --- */
+    .ambient-glow { position: fixed; top: 10%; right: 10%; width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 70%); border-radius: 50%; pointer-events: none; z-index: 0; filter: blur(40px); }
+    @keyframes breathe { 0% {opacity:.3;transform:scale(.98);} 50% {opacity:.8;transform:scale(1.02);} 100% {opacity:.3;transform:scale(.98);} }
+    .glow-pulse { position:absolute; top:-50px; left:50%; transform:translateX(-50%); width:80%; height:100px; background:radial-gradient(ellipse at top, rgba(255,255,255,0.2) 0%, transparent 70%); animation:breathe 4s ease-in-out infinite; pointer-events:none; }
+    @keyframes shimmer { 0% {transform:translateX(-150%) skewX(-15deg);} 100% {transform:translateX(150%) skewX(-15deg);} }
+    .shimmer-effect { position:absolute; top:0; left:0; width:50%; height:100%; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent); animation:shimmer 3s infinite linear; pointer-events:none; }
+    @keyframes fadeInUp { from {opacity:0; transform:translateY(16px);} to {opacity:1; transform:translateY(0);} }
+    .animate-fadeInUp { animation: fadeInUp 0.6s ease-out forwards; }
+
+    /* --- State machine: only the active screen is shown --- */
+    .screen { display: none; }
+    .screen.active { display: flex; }
+</style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+<!-- ===================== Persistent WebGL Background ===================== -->
+<div class="fixed inset-0 w-full h-full" style="z-index:0;">
+<canvas id="shader-canvas-bg" style="display:block;width:100%;height:100%"></canvas>
+</div>
+<div class="ambient-glow"></div>
+
+<!-- ===================== Top Navigation (persistent) ===================== -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding-mobile md:px-container-padding-desktop py-4 backdrop-blur-xl bg-surface/70 border-b border-white/10 shadow-[0_40px_40px_rgba(0,0,0,0.4)]">
+  <div class="font-headline-md text-headline-md font-bold text-primary cursor-pointer" onclick="goHome()">MockMentor</div>
+  <div class="hidden md:flex gap-8 items-center">
+    <a class="text-primary border-b-2 border-primary pb-1 font-body-md text-body-md" href="#" onclick="goHome();return false;">Practice</a>
+    <a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#">History</a>
+    <a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#">Resources</a>
+  </div>
+  <div class="flex gap-4">
+    <button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">settings</span></button>
+    <button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">account_circle</span></button>
+  </div>
+</nav>
+
+<!-- ========================================================================= -->
+<!-- SCREEN 1: Subject Selector (home)                                         -->
+<!-- ========================================================================= -->
+<main id="screen-selector" class="screen active flex-grow flex-col items-center justify-center min-h-screen px-container-padding-mobile pb-24 relative z-10">
+  <div class="liquid-glass w-full max-w-[720px] rounded-[40px] p-8 md:p-12 flex flex-col gap-10 mt-24 relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+    <div class="text-center z-10">
+      <h1 class="text-display-lg-mobile md:text-display-lg text-primary mb-4 tracking-tight">Choose Your Subject</h1>
+      <p class="text-body-lg text-on-surface-variant max-w-md mx-auto">Select a knowledge domain to begin your mock interview session.</p>
+    </div>
+    <div id="subject-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 z-10">
+      <!-- Subject cards injected by JS -->
+    </div>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-2 z-10">
+      <button id="start-session-btn" class="primary-btn text-label-sm font-semibold rounded-full px-10 py-4 w-full sm:w-auto flex items-center justify-center gap-2 group" onclick="startSession()">
+        <span>Start Session</span>
+        <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ========================================================================= -->
+<!-- SCREEN 2: Active Question                                                 -->
+<!-- ========================================================================= -->
+<main id="screen-question" class="screen flex-grow items-center justify-center p-container-padding-mobile md:p-container-padding-desktop z-10 relative pt-24 md:pt-32 pb-24">
+  <div class="liquid-glass w-full max-w-[720px] p-8 md:p-12 relative overflow-hidden flex flex-col gap-8 rounded-[48px]">
+    <div class="flex items-center justify-between text-secondary-fixed-dim font-label-sm text-label-sm uppercase tracking-wider">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-[16px] opacity-70">terminal</span>
+        <span id="q-subject-label">Operating Systems</span>
+      </div>
+      <span id="q-progress-label">Question 1 of 10</span>
+    </div>
+    <h1 id="q-text" class="text-display-lg-mobile md:text-display-lg text-primary">Loading question…</h1>
+    <div class="relative mt-2">
+      <textarea id="answer-input" class="glass-input w-full min-h-[220px] rounded-xl p-6 text-on-surface text-body-lg resize-y placeholder:text-on-surface-variant/50" placeholder="Type your explanation here..."></textarea>
+    </div>
+    <div id="q-error" class="text-[#e57373] text-label-sm hidden"></div>
+    <div class="flex justify-end mt-2">
+      <button id="submit-answer-btn" class="primary-btn text-label-sm px-8 py-4 rounded-full flex items-center gap-2 group" onclick="submitAnswer()">
+        Submit Answer
+        <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ========================================================================= -->
+<!-- SCREEN 3: Grading (overlay-style)                                         -->
+<!-- ========================================================================= -->
+<main id="screen-grading" class="screen flex-grow items-center justify-center min-h-screen p-container-padding-mobile z-10 relative">
+  <div class="glass-slab w-full max-w-[720px] p-8 md:p-16 flex flex-col items-center justify-center text-center min-h-[400px] rounded-[48px]">
+    <div class="glow-pulse"></div>
+    <div class="shimmer-effect"></div>
+    <div class="mb-8 relative">
+      <span class="material-symbols-outlined text-[64px] text-primary/80 animate-pulse">neurology</span>
+      <div class="absolute inset-0 bg-primary/20 blur-xl rounded-full scale-150 animate-pulse"></div>
+    </div>
+    <h1 class="text-headline-md text-primary mb-6 tracking-tight">Evaluating your response...</h1>
+    <div class="h-[24px] overflow-hidden relative w-full max-w-sm">
+      <p id="grading-status" class="text-body-md text-on-surface-variant absolute w-full text-center transition-opacity duration-500">Referencing textbook material...</p>
+    </div>
+    <div class="w-48 h-[2px] bg-white/10 rounded-full mt-12 overflow-hidden">
+      <div class="h-full bg-primary/40 rounded-full w-1/3 relative" style="animation: shimmer 2s infinite linear;">
+        <div class="absolute inset-0 bg-white/50 blur-[2px]"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ========================================================================= -->
+<!-- SCREEN 4: Verdict & Feedback                                              -->
+<!-- ========================================================================= -->
+<main id="screen-verdict" class="screen flex-grow flex-col items-center justify-center pt-32 pb-24 px-container-padding-mobile md:px-container-padding-desktop relative z-10 w-full max-w-4xl mx-auto">
+  <!-- Progress -->
+  <div class="w-full max-w-2xl mb-12 flex flex-col gap-2">
+    <div class="flex justify-between items-center px-1">
+      <span id="v-progress-label" class="text-label-sm text-on-surface-variant">Question 1 of 10</span>
+      <span class="text-label-sm text-on-surface-variant">Operating Systems</span>
+    </div>
+    <div class="h-[2px] w-full bg-surface-container-high rounded-full overflow-hidden">
+      <div id="v-progress-bar" class="h-full bg-primary shadow-[0_0_10px_rgba(255,255,255,0.8)] rounded-full transition-all duration-500" style="width:10%"></div>
+    </div>
+  </div>
+
+  <!-- Verdict card -->
+  <div class="liquid-glass w-full max-w-2xl md:p-12 flex flex-col gap-8 relative overflow-hidden rounded-[48px] p-6">
+    <div class="flex flex-col gap-4 items-center text-center">
+      <div id="v-chip" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full verdict-chip-amber">
+        <span id="v-chip-icon" class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1;">warning</span>
+        <span id="v-chip-text" class="text-label-sm uppercase tracking-wider font-semibold">Partially Correct</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="v-score" class="text-headline-md text-primary font-medium">— / 5</span>
+      </div>
+    </div>
+
+    <!-- Feedback -->
+    <div class="text-body-lg text-on-surface-variant leading-relaxed text-center max-w-xl mx-auto">
+      <p id="v-explanation">—</p>
+    </div>
+    <div class="h-px w-full bg-white/10 my-1"></div>
+
+    <!-- Model Answer -->
+    <div class="glass-well p-6 flex flex-col gap-3 rounded-2xl">
+      <div class="flex items-center gap-2 text-primary">
+        <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1;">lightbulb</span>
+        <span class="text-label-sm font-semibold tracking-wide uppercase">Model Answer</span>
+      </div>
+      <p id="v-model-answer" class="text-body-md text-secondary-fixed-dim leading-relaxed">—</p>
+    </div>
+
+    <!-- Sources -->
+    <div class="glass-well p-6 flex flex-col gap-3 rounded-2xl">
+      <div class="flex items-center gap-2 text-on-surface-variant">
+        <span class="material-symbols-outlined text-[16px]">menu_book</span>
+        <span class="text-label-sm font-medium tracking-wide">Graded against these sources</span>
+      </div>
+      <ul id="v-sources" class="text-body-md text-secondary-fixed-dim flex flex-col gap-1"></ul>
+    </div>
+  </div>
+
+  <!-- Follow-up -->
+  <div class="mt-12 w-full max-w-2xl flex flex-col items-center gap-8 animate-fadeInUp">
+    <div class="text-center flex flex-col gap-3">
+      <span class="text-label-sm text-on-surface-variant uppercase tracking-widest">Follow-up</span>
+      <p id="v-followup" class="text-body-lg text-primary max-w-lg mx-auto">—</p>
+    </div>
+    <div class="flex flex-col sm:flex-row gap-4 w-full justify-center">
+      <button class="glass-btn-secondary px-8 py-4 rounded-full text-label-sm text-primary flex items-center justify-center gap-2 min-w-[160px]" onclick="reAnswer()">
+        <span class="material-symbols-outlined text-[18px]">replay</span> Re-answer
+      </button>
+      <button class="glass-btn-primary px-8 py-4 rounded-full text-label-sm font-semibold flex items-center justify-center gap-2 min-w-[160px]" onclick="answerFollowup()">
+        Answer Follow-up <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+      </button>
+    </div>
+    <button class="mt-2 text-on-surface-variant hover:text-primary transition-colors text-label-sm underline underline-offset-4 decoration-white/20 hover:decoration-white/60" onclick="goHome()">End session &amp; pick a new subject</button>
+  </div>
+</main>
+
+<!-- ===================== WebGL background shader ===================== -->
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-bg');
+  function syncSize() {
+    const w = canvas.clientWidth || 1280, h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+  }
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(syncSize).observe(canvas);
+  syncSize();
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position; varying vec2 v_texCoord;
+    void main(){ v_texCoord = a_position*0.5+0.5; gl_Position = vec4(a_position,0.0,1.0); }`;
+  const fs = `precision highp float; uniform float u_time; uniform vec2 u_resolution; varying vec2 v_texCoord;
+    void main(){
+      vec2 uv = v_texCoord - 0.5;
+      float angle = -u_time * 0.5;
+      float aspect = u_resolution.x / u_resolution.y;
+      vec2 light_origin = vec2(cos(angle)*0.85*aspect, sin(angle)*0.85);
+      vec2 uv_scaled = uv; uv_scaled.x *= aspect;
+      vec2 diff = uv_scaled - light_origin; diff.x /= aspect;
+      float d = length(diff);
+      float gradient = smoothstep(0.8, 0.0, d); gradient = pow(gradient, 1.5);
+      vec3 final_color = mix(vec3(0.0), vec3(1.0), gradient);
+      gl_FragColor = vec4(final_color, 1.0);
+    }`;
+  function cs(t, s){ const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); return sh; }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog); gl.useProgram(prog);
+  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos); gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time'), uRes = gl.getUniformLocation(prog, 'u_resolution');
+  function render(t){
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0,0,canvas.width,canvas.height);
+    if (uTime) gl.uniform1f(uTime, t*0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+
+<!-- ===================== App state machine + API wiring ===================== -->
+<script>
+// ---- Session state (lives in memory; single-page = no fragile storage) ----
+const state = {
+  subjects: {},          // id -> {name, blurb, icon, available}
+  selectedSubject: 'os', // default highlighted card
+  index: 0,              // which seed question (0-based)
+  total: 10,             // count in the bank
+  question: '',          // the question currently being asked
+  isFollowup: false,     // true when the active question came from a follow-up
+};
+
+// ---- Screen switching ----
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ---- Grading status rotation (only runs while grading screen is up) ----
+const GRADING_MESSAGES = [
+  "Referencing textbook material...",
+  "Applying grading criteria...",
+  "Analyzing conceptual understanding...",
+  "Formulating follow-up...",
+];
+let gradingTimer = null;
+function startGradingAnimation() {
+  const el = document.getElementById('grading-status');
+  let i = 0;
+  gradingTimer = setInterval(() => {
+    el.style.opacity = '0';
+    setTimeout(() => { i = (i + 1) % GRADING_MESSAGES.length; el.textContent = GRADING_MESSAGES[i]; el.style.opacity = '1'; }, 500);
+  }, 2500);
+}
+function stopGradingAnimation() { if (gradingTimer) { clearInterval(gradingTimer); gradingTimer = null; } }
+
+// ---- Load subjects into the selector grid ----
+async function loadSubjects() {
+  const grid = document.getElementById('subject-grid');
+  try {
+    const res = await fetch('/api/subjects');
+    state.subjects = await res.json();
+  } catch (e) {
+    grid.innerHTML = '<p class="text-[#e57373] col-span-2 text-center">Could not reach the server. Is it running?</p>';
+    return;
+  }
+  grid.innerHTML = '';
+  // Available subjects first (OS leads, since it's the only one with a corpus).
+  const entries = Object.entries(state.subjects).sort(
+    (a, b) => (b[1].available === true) - (a[1].available === true)
+  );
+  for (const [id, s] of entries) {
+    const active = id === state.selectedSubject && s.available;
+    const card = document.createElement('button');
+    card.className = 'glass-card rounded-2xl p-6 flex flex-col gap-4 text-left group'
+      + (active ? ' active' : '') + (s.available ? '' : ' disabled');
+    card.dataset.subject = id;
+    card.innerHTML = `
+      <div class="flex items-center justify-between w-full">
+        <span class="material-symbols-outlined ${active ? 'text-primary' : 'text-on-surface-variant'} text-3xl">${s.icon}</span>
+        ${s.available
+          ? `<div class="w-3 h-3 rounded-full ${active ? 'bg-white/20 shadow-[0_0_8px_rgba(255,255,255,0.4)]' : 'border border-white/20'}"></div>`
+          : `<span class="text-label-sm text-on-surface-variant opacity-70">Coming soon</span>`}
+      </div>
+      <div>
+        <h3 class="text-headline-md text-primary">${s.name}</h3>
+        <p class="text-label-sm text-on-surface-variant mt-1">${s.blurb}</p>
+      </div>`;
+    if (s.available) card.addEventListener('click', () => selectSubject(id));
+    grid.appendChild(card);
+  }
+  updateStartButton();
+}
+
+function selectSubject(id) {
+  if (!state.subjects[id] || !state.subjects[id].available) return;
+  state.selectedSubject = id;
+  loadSubjects(); // re-render to move the active highlight
+}
+
+function updateStartButton() {
+  const btn = document.getElementById('start-session-btn');
+  const s = state.subjects[state.selectedSubject];
+  btn.disabled = !(s && s.available);
+}
+
+// ---- Flow: start session -> fetch first question ----
+async function startSession() {
+  state.index = 0;
+  state.isFollowup = false;
+  await loadQuestion();
+}
+
+async function loadQuestion() {
+  try {
+    const res = await fetch(`/api/question?subject=${state.selectedSubject}&index=${state.index}`);
+    const data = await res.json();
+    if (data.error) { alert(data.error); return; }
+    state.question = data.question;
+    state.total = data.total;
+    state.index = data.index;
+    renderQuestion();
+    showScreen('question');
+  } catch (e) {
+    alert('Could not load the question. Is the server running?');
+  }
+}
+
+function renderQuestion() {
+  document.getElementById('q-subject-label').textContent = state.subjects[state.selectedSubject]?.name || 'Operating Systems';
+  document.getElementById('q-text').textContent = state.question;
+  const n = state.isFollowup ? state.index + 1 : state.index + 1;
+  document.getElementById('q-progress-label').textContent = state.isFollowup
+    ? 'Follow-up question' : `Question ${n} of ${state.total}`;
+  const input = document.getElementById('answer-input');
+  input.value = '';
+  document.getElementById('q-error').classList.add('hidden');
+  input.focus();
+}
+
+// ---- Flow: submit answer -> grade ----
+async function submitAnswer() {
+  const answer = document.getElementById('answer-input').value.trim();
+  const err = document.getElementById('q-error');
+  if (!answer) { err.textContent = 'Please type an answer before submitting.'; err.classList.remove('hidden'); return; }
+
+  showScreen('grading');
+  startGradingAnimation();
+
+  try {
+    const res = await fetch('/api/grade', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: state.question, answer }),
+    });
+    const result = await res.json();
+    stopGradingAnimation();
+    if (result.error) { alert(result.error); showScreen('question'); return; }
+    renderVerdict(result);
+    showScreen('verdict');
+  } catch (e) {
+    stopGradingAnimation();
+    alert('Grading failed. Is Ollama running with qwen3:8b?');
+    showScreen('question');
+  }
+}
+
+// ---- Render the verdict screen from a grade result ----
+function renderVerdict(r) {
+  // Verdict chip: color + icon by verdict string.
+  const chip = document.getElementById('v-chip');
+  const icon = document.getElementById('v-chip-icon');
+  const text = document.getElementById('v-chip-text');
+  const verdict = r.verdict || 'Unknown';
+  chip.className = 'inline-flex items-center gap-2 px-4 py-1.5 rounded-full ';
+  if (verdict === 'Correct') { chip.className += 'verdict-chip-green'; icon.textContent = 'check_circle'; }
+  else if (verdict === 'Partially Correct') { chip.className += 'verdict-chip-amber'; icon.textContent = 'warning'; }
+  else { chip.className += 'verdict-chip-red'; icon.textContent = 'cancel'; }
+  text.textContent = verdict;
+
+  document.getElementById('v-score').textContent = (r.score ?? '—') + ' / 5';
+  document.getElementById('v-explanation').textContent = r.explanation || '—';
+  document.getElementById('v-model-answer').textContent = r.model_answer || '—';
+  document.getElementById('v-followup').textContent = r.follow_up_question || '—';
+
+  // Sources list.
+  const ul = document.getElementById('v-sources');
+  ul.innerHTML = '';
+  (r.sources || []).forEach(s => {
+    const li = document.createElement('li');
+    li.textContent = `• ${s.chapter_name} (page ${s.page_number})`;
+    ul.appendChild(li);
+  });
+
+  // Progress bar reflects position in the seed bank (follow-ups don't advance it).
+  const pct = Math.round(((state.index + 1) / state.total) * 100);
+  document.getElementById('v-progress-bar').style.width = pct + '%';
+  const label = state.isFollowup ? 'Follow-up question' : `Question ${state.index + 1} of ${state.total}`;
+  document.getElementById('v-progress-label').textContent = label;
+
+  // Stash the follow-up so the button can promote it.
+  state.pendingFollowup = r.follow_up_question || '';
+}
+
+// ---- Verdict actions ----
+function reAnswer() {
+  // Re-answer the SAME question.
+  renderQuestion();
+  showScreen('question');
+}
+
+function answerFollowup() {
+  // Promote the model's follow-up to the active question.
+  if (!state.pendingFollowup) return;
+  state.question = state.pendingFollowup;
+  state.isFollowup = true;
+  renderQuestion();
+  showScreen('question');
+}
+
+function goHome() {
+  stopGradingAnimation();
+  state.isFollowup = false;
+  state.index = 0;
+  showScreen('selector');
+  loadSubjects();
+}
+
+// ---- Boot ----
+loadSubjects();
+</script>
+</body>
+</html>

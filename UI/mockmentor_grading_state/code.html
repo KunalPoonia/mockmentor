@@ -1,0 +1,323 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Evaluating Response - MockMentor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#c8c5cb",
+                        "secondary-container": "#47464b",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "surface-container-high": "#2a2a2a",
+                        "on-error": "#690005",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed-variant": "#474649",
+                        "outline": "#8e9192",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-primary-fixed-variant": "#454747",
+                        "error-container": "#93000a",
+                        "surface-container-low": "#1c1b1b",
+                        "inverse-surface": "#e5e2e1",
+                        "tertiary-fixed-dim": "#c8c6c8",
+                        "secondary-fixed": "#e4e1e7",
+                        "primary": "#ffffff",
+                        "primary-container": "#e2e2e2",
+                        "on-background": "#e5e2e1",
+                        "on-tertiary-fixed": "#1b1b1d",
+                        "primary-fixed": "#e2e2e2",
+                        "outline-variant": "#444748",
+                        "on-surface": "#e5e2e1",
+                        "on-secondary-container": "#b6b4b9",
+                        "surface-bright": "#3a3939",
+                        "surface-variant": "#353534",
+                        "on-tertiary": "#303032",
+                        "tertiary-fixed": "#e4e2e4",
+                        "surface": "#131313",
+                        "tertiary": "#ffffff",
+                        "on-primary-container": "#636565",
+                        "on-primary": "#2f3131",
+                        "secondary": "#c8c5cb",
+                        "on-secondary-fixed-variant": "#47464b",
+                        "surface-dim": "#131313",
+                        "on-surface-variant": "#c4c7c8",
+                        "inverse-on-surface": "#313030",
+                        "tertiary-container": "#e4e2e4",
+                        "on-primary-fixed": "#1a1c1c",
+                        "inverse-primary": "#5d5f5f",
+                        "surface-container-highest": "#353534",
+                        "surface-tint": "#c6c6c7",
+                        "on-tertiary-container": "#656466",
+                        "on-secondary-fixed": "#1b1b1f",
+                        "background": "#131313",
+                        "on-secondary": "#303034",
+                        "surface-container": "#201f1f",
+                        "on-error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-padding-mobile": "20px",
+                        "container-padding-desktop": "40px",
+                        "safe-area": "32px",
+                        "gutter": "24px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["13px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Ambient Background Gradient */
+        .ambient-bg {
+            background: radial-gradient(circle at 75% 25%, rgba(255,255,255,0.08) 0%, rgba(19,19,19,1) 60%);
+        }
+
+        /* Liquid Glass Slab */
+        .glass-slab {
+            background: rgba(42, 42, 46, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Ambient Breathing Glow Animation */
+        @keyframes breathe {
+            0% { opacity: 0.3; transform: scale(0.98); }
+            50% { opacity: 0.8; transform: scale(1.02); }
+            100% { opacity: 0.3; transform: scale(0.98); }
+        }
+        
+        .glow-pulse {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 100px;
+            background: radial-gradient(ellipse at top, rgba(255,255,255,0.2) 0%, transparent 70%);
+            animation: breathe 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        /* Shimmering Surface Animation */
+        @keyframes shimmer {
+            0% { transform: translateX(-150%) skewX(-15deg); }
+            100% { transform: translateX(150%) skewX(-15deg); }
+        }
+
+        .shimmer-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            animation: shimmer 3s infinite linear;
+            pointer-events: none;
+        }
+
+        /* Text Fade Animation */
+        .fade-text {
+            animation: fadeInOut 3s infinite;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen ambient-bg flex items-center justify-center p-container-padding-mobile md:p-container-padding-desktop pt-24" style="background-color: rgb(0, 0, 0); min-height: 100vh; color: rgb(229, 226, 225); overflow-x: hidden;">
+<!-- Animated WebGL Background -->
+<div class="fixed inset-0 w-full h-full" style="display:block; z-index: 0;">
+<canvas id="shader-canvas-bg" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-bg');
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+varying vec2 v_texCoord;
+
+void main() {
+    // Center the UV coordinates
+    vec2 uv = v_texCoord - 0.5;
+    
+    // Calculate rotation angle (clockwise rotation)
+    float angle = -u_time * 0.5;
+    
+    // Calculate aspect ratio
+    float aspect = u_resolution.x / u_resolution.y;
+    
+    // Create an elliptical path that follows screen borders
+    vec2 light_origin = vec2(
+        cos(angle) * 0.85 * aspect,
+        sin(angle) * 0.85
+    );
+    
+    // For distance calculation, use anisotropic scaling
+    // Scale the distance measurement inversely to maintain consistent gradient size
+    vec2 uv_scaled = uv;
+    uv_scaled.x *= aspect;
+    
+    // Calculate anisotropic distance - compensate for aspect ratio stretching
+    vec2 diff = uv_scaled - light_origin;
+    // Scale the difference based on position - make horizontal distances "shorter" perceptually
+    diff.x /= aspect;
+    float d = length(diff);
+    
+    // Use consistent gradient size (reduced from 1.0 to 0.8)
+    float gradient = smoothstep(0.8, 0.0, d);
+    gradient = pow(gradient, 1.5);
+    
+    vec3 color_bg = vec3(0.0, 0.0, 0.0);
+    vec3 color_light = vec3(1.0, 1.0, 1.0);
+    
+    vec3 final_color = mix(color_bg, color_light, gradient);
+    
+    gl_FragColor = vec4(final_color, 1.0);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div><nav class="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-md border-b border-outline-variant/30 px-container-padding-mobile md:px-container-padding-desktop h-16 flex items-center justify-between"><div class="flex items-center gap-8"><div class="text-primary font-bold text-xl tracking-tight">MockMentor</div><div class="hidden md:flex items-center gap-6"><a href="#" class="text-on-surface-variant hover:text-primary transition-colors font-medium">Practice</a><a href="#" class="text-on-surface-variant hover:text-primary transition-colors font-medium">History</a><a href="#" class="text-on-surface-variant hover:text-primary transition-colors font-medium">Resources</a></div></div><div class="flex items-center gap-4"><button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">settings</span></button><button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">account_circle</span></button></div></nav>
+<!-- Suppressed Navigation Shells because this is a transitional loading state -->
+<main class="w-full max-w-[720px] mx-auto z-10 relative">
+<!-- Grading Container -->
+<div class="glass-slab p-8 md:p-16 flex flex-col items-center justify-center text-center min-h-[400px] rounded-[2rem]" style="background-color: rgba(255, 255, 255, 0.02); backdrop-filter: blur(4px); border-top: 1.5px solid rgba(255, 255, 255, 0.8); border-left: 1.5px solid rgba(255, 255, 255, 0.6); box-shadow: rgba(0, 0, 0, 0.6) 0px 40px 80px, rgba(255, 255, 255, 0.7) 0px 2px 8px inset, rgba(255, 255, 255, 0.1) 0px 0px 30px inset; border-radius: 48px;"><div class="absolute top-0 left-0 right-0 h-px z-10 pointer-events-none" style="background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgb(255, 255, 255) 10%, rgb(255, 255, 255) 15%, rgba(255, 255, 255, 0.5) 30%, rgba(255, 255, 255, 0) 100%);" data-stitch-orig-opacity="1"></div>
+<!-- Visual Effects -->
+<div class="glow-pulse"></div>
+<div class="shimmer-effect"></div>
+<!-- Iconography -->
+<div class="mb-8 relative">
+<span class="material-symbols-outlined text-[64px] text-primary/80 animate-pulse" style="font-variation-settings: 'FILL' 0;">
+                    neurology
+                </span>
+<div class="absolute inset-0 bg-primary/20 blur-xl rounded-full scale-150 animate-pulse"></div>
+</div>
+<!-- Primary Status Heading -->
+<h1 class="font-headline-md text-headline-md text-primary mb-6 tracking-tight">
+                Evaluating your response...
+            </h1>
+<!-- Rotating Status Text -->
+<div class="h-[24px] overflow-hidden relative w-full max-w-sm">
+<p class="font-body-md text-body-md text-on-surface-variant fade-text absolute w-full text-center transition-all duration-500 ease-in-out" id="status-text">
+                    Referencing textbook material...
+                </p>
+</div>
+<!-- Subtle Progress Indication -->
+<div class="w-48 h-[2px] bg-white/10 rounded-full mt-12 overflow-hidden">
+<div class="h-full bg-primary/40 rounded-full w-1/3 animate-[shimmer_2s_infinite_linear] relative">
+<div class="absolute inset-0 bg-white/50 blur-[2px]"></div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Rotating status text logic
+        const statuses = [
+            "Referencing textbook material...",
+            "Applying grading criteria...",
+            "Formulating follow-up...",
+            "Analyzing conceptual understanding..."
+        ];
+        
+        const statusElement = document.getElementById('status-text');
+        let currentIndex = 0;
+
+        setInterval(() => {
+            // Fade out
+            statusElement.style.opacity = '0';
+            
+            setTimeout(() => {
+                // Change text and fade in
+                currentIndex = (currentIndex + 1) % statuses.length;
+                statusElement.textContent = statuses[currentIndex];
+                statusElement.style.opacity = '1';
+            }, 500); // Wait for fade out to complete before changing text
+            
+        }, 3000); // Change status every 3 seconds
+    </script>
+
+
+</body></html>
