@@ -1,6 +1,6 @@
 # MockMentor - Complete Progress Summary
 it's a personal/supplementary log, not the official status doc
-**Last Updated:** July 1, 2026
+**Last Updated:** July 2, 2026
 
 ---
 
@@ -145,7 +145,7 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 
 ---
 
-## 🎯 Current Status: Step 2.3 Complete — Data Layer Done ✅
+## 🎯 Current Status: Step 2.5 Complete — Full RAG Loop Demoable ✅
 
 ### **What's Working:**
 ✅ Local LLM inference (Ollama + qwen3:8b, llama3.1:8b fallback)  
@@ -157,11 +157,13 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 ✅ **`src/ingest.py` built & verified — 79 chunks across 5 chapters**  
 ✅ **`src/embed_store.py` built & verified — 79 chunks embedded into ChromaDB (`ostep` collection)**  
 ✅ **`src/retrieve.py` built & verified — top-k (k=3) semantic retrieval, known questions hit the right chapter**  
+✅ **`src/evaluate.py` built & verified — RAG-grounded grading + adaptive follow-up (qwen3:8b, JSON output)**  
+✅ **`src/app.py` built & verified — Streamlit UI wiring the full loop; boots headless with no errors**  
 
-### **What's Next (Step 2.4 / Week 2 - Evaluate):**
-⏳ Write `evaluate.py` — feed retrieved chunks + student answer to `qwen3:8b` for RAG-grounded grading  
-⏳ Generate an adaptive follow-up question based on performance  
-⏳ Wire `ingest → embed → retrieve → evaluate` into `app.py` (Streamlit) for first end-to-end testing  
+### **What's Next (Week 3 - Hardening & Polish):**
+⏳ Add 1–2 tests in `tests/` (retrieve hits right chapter; evaluate returns valid JSON schema)  
+⏳ Manual QA pass over the Streamlit app (edge cases: empty answer, Ollama down, cold-start latency)  
+⏳ Optional: promote the `stitch_mockmentor_liquid_glass_ui/` mockups into the real frontend  
 
 **UI note:** for first testing and iteration we're using **Streamlit only** (`app.py`). The `stitch_mockmentor_liquid_glass_ui/` design mockups are parked for a later polish pass.  
 
@@ -371,6 +373,48 @@ SJF / round-robin / turnaround   -> Scheduling Intro ×3 (rank #1) ✅
 
 ---
 
+### **Step 2.4 - Grade Answers (RAG Generation)** ✅ DONE (Jul 2)
+**Goal:** Grade a student's answer against retrieved OSTEP chunks and generate an adaptive follow-up.
+
+**What was built:**
+- [x] `src/evaluate.py`:
+  - `grade_answer(question, student_answer, chunks=None, k=3, model)` — reuses `retrieve.retrieve()` when chunks aren't passed, but accepts pre-retrieved chunks so the app retrieves once and shares the lookup
+  - Prompt instructs the model to grade **only against the provided context** (not general knowledge) and cite chapter/page
+  - Returns structured JSON: `verdict` (Correct / Partially Correct / Incorrect), `score` (0–5), `explanation`, `follow_up_question`, plus `sources` (chunks used)
+  - **qwen3 `<think>` quirk handled three ways:** `/no_think` in the system prompt, Ollama `format="json"`, and a defensive `<think>`-strip + outermost-`{...}` regex extractor; `temperature=0.2` for grading stability; output keys normalised so the UI never hits a `KeyError`
+  - `llama3.1:8b` fallback is one arg away (`model="llama3.1:8b"`)
+- [x] Verified end-to-end via `python src/evaluate.py`
+
+**Verified output (partially-correct sample answer on deadlocks):**
+```
+Verdict:     Partially Correct
+Score:       2/5
+Explanation: Correctly identifies deadlocks as threads waiting on each other but
+             misses the four necessary conditions (mutual exclusion, hold-and-wait,
+             no preemption, circular wait) from Source 2 (page 383). Too vague on causes.
+Follow-up:   What are the four conditions that must all be true for a deadlock to occur?
+Graded against: Concurrency Problems (Deadlocks) pp. 382, 383, 386
+```
+The feedback cites the actual OSTEP page — the core payoff of grounding grading in RAG.
+
+---
+
+### **Step 2.5 - Streamlit App (End-to-End Wiring)** ✅ DONE (Jul 2)
+**Goal:** Tie question → answer → retrieve → grade → follow-up into an interactive UI.
+
+**What was built:**
+- [x] `src/app.py`:
+  - **Sidebar question bank** — 5 chapters × 2 seed questions to start a session
+  - **Submit flow** — retrieves chunks once, passes them into `grade_answer()`, so the UI can also show the exact sources
+  - **Adaptive follow-up loop** — the model's follow-up renders with an "Answer the follow-up →" button that promotes it to the next question
+  - **Grounded display** — verdict color-coded (green/amber/red) + score, feedback, and a "Sources used for grading" expander (the RAG receipts)
+  - **Robustness** — empty-answer guard, cold-start spinner note, `@st.cache_resource` so ChromaDB + embedding model load only once (not on every rerun)
+- [x] Verified: boots headless (`streamlit run src/app.py --server.headless true`) with Local/Network/External URLs and **no tracebacks**
+
+**Gotcha documented in README:** running a bare `streamlit`/`python` from a plain terminal uses the *global* Python and fails with `No module named chromadb`. Fix: activate the venv first (or call `venv\Scripts\streamlit run src/app.py` directly).
+
+---
+
 ## 📈 Progress Timeline
 
 | Date | Milestone | Status |
@@ -388,8 +432,10 @@ SJF / round-robin / turnaround   -> Scheduling Intro ×3 (rank #1) ✅
 | Jun 29 | Build & verify `ingest.py` (79 chunks, 5 chapters) | ✅ Done |
 | Jun 29 | Build & verify `embed_store.py` (79 chunks → ChromaDB) | ✅ Done |
 | Jul 1 | Build & verify `retrieve.py` (top-k=3 retrieval) | ✅ Done |
-| **Next** | **RAG grading logic (`evaluate.py`, Step 2.4 / Week 2)** | ⏳ Pending |
-| **Next** | **Streamlit end-to-end wiring (`app.py`)** | ⏳ Pending |
+| Jul 2 | Build & verify `evaluate.py` (RAG grading + follow-up) | ✅ Done |
+| Jul 2 | Build & verify `app.py` (Streamlit end-to-end wiring) | ✅ Done |
+| **Next** | **Tests + manual QA pass (Week 3)** | ⏳ Pending |
+| **Next** | **Optional: liquid-glass frontend** | ⏳ Pending |
 
 ---
 
@@ -407,12 +453,13 @@ SJF / round-robin / turnaround   -> Scheduling Intro ×3 (rank #1) ✅
 - [x] Data ingestion pipeline (`src/ingest.py`) — 79 chunks, verified
 - [x] Embedding & storage pipeline (`src/embed_store.py`) — 79 chunks in ChromaDB, verified
 - [x] Retrieval logic (`src/retrieve.py`) — top-k=3 semantic retrieval, verified
-- [ ] Grading logic (`src/evaluate.py`)
-- [ ] Streamlit UI (`src/app.py`)
+- [x] Grading logic (`src/evaluate.py`) — RAG-grounded grading + follow-up, verified
+- [x] Streamlit UI (`src/app.py`) — full loop wired, boots clean, verified
 
-**Phase 1 completion:** 12/14 items (86%)  
+**Phase 1 completion:** 14/14 items (100%) ✅  
 **Data layer (ingest → embed → retrieve):** ✅ Complete  
-**Phase 2 readiness:** 100% (all prerequisites met)
+**RAG loop (retrieve → grade → follow-up → UI):** ✅ Complete — demoable end-to-end  
+**Next phase (Week 3):** tests + manual QA hardening
 
 ---
 
@@ -441,4 +488,4 @@ SJF / round-robin / turnaround   -> Scheduling Intro ×3 (rank #1) ✅
 ---
 
 **End of Progress Summary**  
-*Step 2.3 (Retrieve) complete — data layer (ingest → embed → retrieve) done. Ready to begin Step 2.4 (Evaluate / RAG grading) whenever you are.*
+*Steps 2.4 (Evaluate) + 2.5 (Streamlit app) complete — the full RAG loop (ingest → embed → retrieve → grade → follow-up → UI) runs end-to-end and is demoable. Next up: Week 3 hardening (tests + manual QA).*
