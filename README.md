@@ -93,21 +93,42 @@ See `data/raw/README.md` for exact instructions.
 
 ### Run
 
-> 🚧 **Full app (`streamlit run src/app.py`) is not yet available** — in progress, target end of Week 2 (10 July 2026).
+> ⚠️ **Activate the venv first.** Every command below must run inside the virtual environment — that's where `chromadb`, `streamlit`, etc. live. If you run a bare `streamlit`/`python` from a plain terminal it uses your *global* Python and fails with `No module named chromadb`.
+>
+> ```bash
+> # Windows:
+> .\venv\Scripts\activate
+> # macOS/Linux:
+> source venv/bin/activate
+> ```
+> Your prompt should now show `(venv)`. (Or skip activation and call the venv copy directly, e.g. `venv\Scripts\streamlit run src/app.py`.)
 
-Currently runnable (Week 1 — data layer):
+**Full app (mock interview UI):**
+```bash
+streamlit run src/app.py
+```
+Launches the Streamlit interface: pick a chapter + question, type an answer, and get a RAG-grounded grade (verdict, score, feedback), an adaptive follow-up question, and the OSTEP sources the grade was based on. **Requires Ollama running with `qwen3:8b` and a built `chroma_db/`** (run `python src/embed_store.py` once first).
 
+**Data-layer scripts (run individually to verify each stage):**
 ```bash
 python src/ingest.py
 ```
 Loads the 5 OSTEP chapters, chunks them, and prints chunk counts + previews for verification. Verified output: 79 chunks across all 5 chapters (Introduction to OS: 23, Scheduling Intro: 14, Address Spaces: 10, Concurrency Intro: 16, Concurrency Problems/Deadlocks: 16), each tagged with `chapter_name` and `page_number` metadata.
 
-> 📸 *Terminal screenshot/output to be added here before Week 1 submission (4 July).*
-
 ```bash
 python src/embed_store.py
 ```
-Embeds all chunks and stores them in a local ChromaDB collection (`chroma_db/`). Safe to re-run — skips re-embedding if the collection already exists.
+Embeds all chunks and stores them in a local ChromaDB collection (`chroma_db/`). Safe to re-run — recreates the collection cleanly so there are no duplicates.
+
+```bash
+python src/retrieve.py
+```
+Sanity-checks semantic retrieval: runs known questions and confirms they pull back chunks from the correct chapter (top-k=3).
+
+```bash
+python src/evaluate.py
+```
+Runs a demo grade end-to-end (retrieve → grade with `qwen3:8b`) on one sample Q/A, printing the verdict, score, explanation, follow-up, and sources.
 
 ### Test
 
