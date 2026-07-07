@@ -43,6 +43,17 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 UI_DIR = PROJECT_ROOT / "UI"
 
 app = Flask(__name__)
+# Dev: never let the browser cache the UI files, so edits to index.html / CSS
+# show up on a normal refresh instead of serving a stale cached copy.
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
+
+
+@app.after_request
+def add_no_cache_headers(response):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 # Open the vector store once at import time and hand the same handle to every
 # request. get_collection() also loads the embedding model, so we very much

@@ -476,8 +476,14 @@ The feedback cites the actual OSTEP page — the core payoff of grounding gradin
 | Jul 1 | Build & verify `retrieve.py` (top-k=3 retrieval) | ✅ Done |
 | Jul 2 | Build & verify `evaluate.py` (RAG grading + follow-up) | ✅ Done |
 | Jul 2 | Build & verify `app.py` (Streamlit end-to-end wiring) | ✅ Done |
-| **Next** | **Tests + manual QA pass (Week 3)** | ⏳ Pending |
-| **Next** | **Optional: liquid-glass frontend** | ⏳ Pending |
+| Jul 2 | Add `model_answer` to grading feedback | ✅ Done |
+| Jul 2 | Flask backend (`server.py`) + `questions.py` + web wiring | ✅ Done |
+| Jul 6 | Liquid-glass single-page web app (`UI/index.html`) | ✅ Done |
+| Jul 6 | Adaptive glass lighting (background-agnostic reflections) | ✅ Done |
+| Jul 6 | Styled error popups + grading-bar fixes | ✅ Done |
+| Jul 6 | Functional navbar (History / Resources / Settings / Account) | ✅ Done |
+| **Next** | **Tests + wire custom resources into RAG (Week 3)** | ⏳ Pending |
+| **Next** | **Optional: difficulty selector affecting grading** | ⏳ Pending |
 
 ---
 
