@@ -133,105 +133,11 @@
         background-color: rgba(255, 255, 255, 0.08);
     }
 </style></head><body class="bg-background text-on-surface antialiased min-h-screen flex flex-col font-body-md overflow-x-hidden selection:bg-surface-bright selection:text-primary" style="background-color: rgb(0, 0, 0);">
-<!-- Animated WebGL Background -->
+<!-- Animated Video Background -->
 <div class="fixed inset-0 w-full h-full" style="display:block; z-index: 0;">
-<canvas id="shader-canvas-bg" style="display:block;width:100%;height:100%"></canvas>
-<script>
-(function() {
-  const canvas = document.getElementById('shader-canvas-bg');
-  function syncSize() {
-    const w = canvas.clientWidth  || 1280;
-    const h = canvas.clientHeight || 720;
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width  = w;
-      canvas.height = h;
-    }
-  }
-  if (typeof ResizeObserver !== 'undefined') {
-    new ResizeObserver(syncSize).observe(canvas);
-  }
-  syncSize();
-  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-  if (!gl) return;
-  const vs = `attribute vec2 a_position;
-varying vec2 v_texCoord;
-void main() {
-  v_texCoord = a_position * 0.5 + 0.5;
-  gl_Position = vec4(a_position, 0.0, 1.0);
-}`;
-  const fs = `precision highp float;
-uniform float u_time;
-uniform vec2 u_resolution;
-varying vec2 v_texCoord;
-
-void main() {
-    // Center the UV coordinates
-    vec2 uv = v_texCoord - 0.5;
-    
-    // Calculate rotation angle (clockwise rotation)
-    float angle = -u_time * 0.5;
-    
-    // Calculate aspect ratio
-    float aspect = u_resolution.x / u_resolution.y;
-    
-    // Create an elliptical path that follows screen borders
-    vec2 light_origin = vec2(
-        cos(angle) * 0.85 * aspect,
-        sin(angle) * 0.85
-    );
-    
-    // For distance calculation, use anisotropic scaling
-    // Scale the distance measurement inversely to maintain consistent gradient size
-    vec2 uv_scaled = uv;
-    uv_scaled.x *= aspect;
-    
-    // Calculate anisotropic distance - compensate for aspect ratio stretching
-    vec2 diff = uv_scaled - light_origin;
-    // Scale the difference based on position - make horizontal distances "shorter" perceptually
-    diff.x /= aspect;
-    float d = length(diff);
-    
-    // Use consistent gradient size (reduced from 1.0 to 0.8)
-    float gradient = smoothstep(0.8, 0.0, d);
-    gradient = pow(gradient, 1.5);
-    
-    vec3 color_bg = vec3(0.0, 0.0, 0.0);
-    vec3 color_light = vec3(1.0, 1.0, 1.0);
-    
-    vec3 final_color = mix(color_bg, color_light, gradient);
-    
-    gl_FragColor = vec4(final_color, 1.0);
-}`;
-  function cs(type, src) {
-    const s = gl.createShader(type);
-    gl.shaderSource(s, src);
-    gl.compileShader(s);
-    return s;
-  }
-  const prog = gl.createProgram();
-  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
-  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
-  gl.linkProgram(prog);
-  gl.useProgram(prog);
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
-  const pos = gl.getAttribLocation(prog, 'a_position');
-  gl.enableVertexAttribArray(pos);
-  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
-  const uTime = gl.getUniformLocation(prog, 'u_time');
-  const uRes = gl.getUniformLocation(prog, 'u_resolution');
-  function render(t) {
-    if (typeof ResizeObserver === 'undefined') syncSize();
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    if (uTime) gl.uniform1f(uTime, t * 0.001);
-    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    requestAnimationFrame(render);
-  }
-  render(0);
-})();
-</script>
+<video autoplay loop muted playsinline style="display:block;width:100%;height:100%;object-fit:cover;">
+<source src="/animated_background/black.mp4" type="video/mp4">
+</video>
 </div>
 <!-- Top Navigation Shell -->
 <nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding-desktop py-4 bg-transparent bg-surface/70 border-b border-white/10 shadow-[0_40px_40px_rgba(0,0,0,0.4)] hidden md:flex backdrop-blur-xl">

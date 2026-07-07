@@ -38,9 +38,9 @@ from retrieve import retrieve
 # --- Paths -------------------------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# The single-page UI lives in the liquid-glass folder as index.html (built to
+# The single-page UI lives in the UI folder as index.html (built to
 # be self-contained: Tailwind via CDN, inline styles + JS).
-UI_DIR = PROJECT_ROOT / "stitch_mockmentor_liquid_glass_ui"
+UI_DIR = PROJECT_ROOT / "UI"
 
 app = Flask(__name__)
 
@@ -56,6 +56,12 @@ collection = get_collection()
 def index():
     """Serve the single-page app."""
     return send_from_directory(UI_DIR, "index.html")
+
+
+@app.route("/<path:filename>")
+def serve_static(filename):
+    """Serve static files (videos, images, etc.) from the UI directory."""
+    return send_from_directory(UI_DIR, filename)
 
 
 # --- API ---------------------------------------------------------------------

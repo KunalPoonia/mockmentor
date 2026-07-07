@@ -52,45 +52,121 @@
 }catch(_e){}</script>
 <style>
     /* ============ Shared design system (merged from the 4 mockups) ============ */
+    html { zoom: 90%; }
     body { background-color: #000; min-height: 100vh; color: #e5e2e1; overflow-x: hidden; font-family: 'Inter', sans-serif; }
 
-    /* --- Glass surfaces --- */
-    .liquid-glass {
-        background-color: rgba(42, 42, 46, 0.4);
-        backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-        border-top: 1px solid rgba(255, 255, 255, 0.15);
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    /* Text-shadow safety net: the background is a video that ranges black->white,
+       so light text needs a dark halo to stay legible on bright frames. Applied
+       to all headings and paragraph text. */
+    h1, h2, h3, p, .text-primary, .text-on-surface-variant, .text-secondary-fixed-dim {
+        text-shadow: 0 1px 3px rgba(0,0,0,0.65), 0 0 12px rgba(0,0,0,0.45);
     }
+
+    /* --- Glass surfaces ---------------------------------------------------
+       iOS-style "clear glass": low blur so the background reads through, a
+       saturation/brightness boost (the trick that makes Apple's glass feel
+       vivid rather than frosted), and layered inset borders for real edge
+       depth - a bright top-left rim (facing light) and a dark bottom-right
+       (in shadow). The moving specular + rim highlights live in the
+       ::before / ::after pseudo-elements, driven by --glow-* variables that
+       JS updates every frame to track the WebGL light source. */
+    /* MAIN panels only (.liquid-glass / .glass-slab) are THICK glass. Depth is
+       built from EVEN, all-sides insets (no directional bevel, no baked-in
+       light) so the edge is uniformly thick on every side. There is NO static
+       white border - the bright edges come only from reflected light, driven
+       per-edge by the adaptive sampler (--rt/--rr/--rb/--rl) so a dark
+       background produces no reflection at all. Nested wells and buttons stay
+       thin; the thickness contrast is what makes this read as a solid slab. */
+    .liquid-glass, .glass-slab {
+        --rim: 3px;                                          /* even rim thickness, all sides */
+        position: relative;
+        background-color: rgba(12, 12, 15, 0.62);           /* darker tint so white video never washes it out */
+        backdrop-filter: blur(9px) saturate(140%) brightness(0.72) contrast(1.04);
+        -webkit-backdrop-filter: blur(9px) saturate(140%) brightness(0.72) contrast(1.04);
+        border: none;                                        /* no flat white outline */
+        box-shadow:
+            0 44px 90px -20px rgba(0, 0, 0, 0.90),          /* deep drop = heavy slab */
+            inset 0 0 0 1px rgba(255, 255, 255, 0.04),      /* faint EVEN seam (all sides) */
+            inset 0 0 0 var(--rim) rgba(255, 255, 255, 0.020), /* EVEN inner frame -> thickness */
+            inset 0 0 22px rgba(0, 0, 0, 0.55);             /* EVEN inner shade -> depth */
+    }
+    .glass-slab { overflow: hidden; }                        /* grading screen clips shimmer */
+
+    /* Specular bloom - a soft pool at the brightest point the sampler found
+       behind the panel. Multiplied by --glow-i, so it VANISHES when there's no
+       light (no default position, no top-left bias). */
+    .liquid-glass::before, .glass-slab::before {
+        content: ""; position: absolute; inset: 0; border-radius: inherit;
+        pointer-events: none; z-index: 0;
+        background: radial-gradient(50% 50% at var(--glow-x, 50%) var(--glow-y, 50%),
+            rgba(255, 255, 255, calc(0.32 * var(--glow-i, 0))) 0%,
+            rgba(255, 255, 255, calc(0.11 * var(--glow-i, 0))) 32%,
+            transparent 60%);
+        mix-blend-mode: screen;
+    }
+    /* Adaptive rim (MAIN panels only) - four edge gradients, each lit by the
+       REAL brightness sampled behind that edge (--rt top, --rb bottom, --rl
+       left, --rr right). Masked to the even `--rim` border so only the thick
+       edge shows. Every term is 0 when its edge is dark => no line without
+       light, and it reflects light from any direction at once. Each gradient
+       uses a soft mid-stop and the whole layer is blurred a touch so the glow
+       feathers along the edge and across corners instead of showing a hard band. */
+    .liquid-glass::after, .glass-slab::after {
+        content: ""; position: absolute; inset: 0; border-radius: inherit;
+        pointer-events: none; z-index: 1;
+        /* Transparent BORDER (not padding): with a real border the browser
+           computes the inner (padding-box) corner radius as outer - width, so
+           the ring's inner and outer arcs stay perfectly concentric = round
+           corners. A content-box/padding mask offsets the inner arc and
+           pinches the corners. */
+        border: var(--rim, 2px) solid transparent;
+        background:
+            linear-gradient(to bottom, rgba(255,255,255, calc(var(--rt, 0))) 0%, rgba(255,255,255, calc(var(--rt, 0) * 0.38)) 22%, transparent 52%),
+            linear-gradient(to top,    rgba(255,255,255, calc(var(--rb, 0))) 0%, rgba(255,255,255, calc(var(--rb, 0) * 0.38)) 22%, transparent 52%),
+            linear-gradient(to right,  rgba(255,255,255, calc(var(--rl, 0))) 0%, rgba(255,255,255, calc(var(--rl, 0) * 0.38)) 22%, transparent 52%),
+            linear-gradient(to left,   rgba(255,255,255, calc(var(--rr, 0))) 0%, rgba(255,255,255, calc(var(--rr, 0) * 0.38)) 22%, transparent 52%);
+        filter: blur(1px);
+        -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0) border-box;
+        -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+
+    /* Subject cards: thin glass (not thickened), same borderless/adaptive rim
+       treatment so they don't show a static white outline either. */
     .glass-card {
-        background-color: rgba(42, 42, 46, 0.3);
-        backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        border-left: 1px solid rgba(255, 255, 255, 0.05);
+        --rim: 1.6px;
+        position: relative;
+        background-color: rgba(10, 10, 12, 0.72);
+        backdrop-filter: blur(6px) saturate(120%) brightness(0.75);
+        -webkit-backdrop-filter: blur(6px) saturate(120%) brightness(0.75);
+        border: none;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), inset 0 0 14px rgba(0,0,0,0.5), 0 10px 30px -12px rgba(0,0,0,0.7);
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
     .glass-card:not(.disabled):hover, .glass-card.active {
-        background-color: rgba(255, 255, 255, 0.08);
+        background-color: rgba(20, 20, 24, 0.8);
         transform: translateY(-2px);
-        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10), 0 20px 40px -10px rgba(0, 0, 0, 0.6);
     }
-    .glass-card.active { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 20px 40px -10px rgba(0, 0, 0, 0.5); }
+    /* Selected card: a PERMANENT glow (static, independent of the background) -
+       inner panels no longer track the background, so selection is shown with a
+       steady halo + ring + inner sheen instead of a reflection. */
+    .glass-card.active {
+        box-shadow:
+            0 0 0 1px rgba(255,255,255,0.45),          /* crisp selection ring */
+            0 0 30px rgba(255,255,255,0.22),           /* permanent outer glow */
+            inset 0 0 26px rgba(255,255,255,0.10),     /* inner sheen */
+            inset 0 1px 0 rgba(255,255,255,0.30),      /* top light */
+            0 20px 40px -10px rgba(0, 0, 0, 0.5);
+    }
     .glass-card.disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Nested wells (model answer / sources): clearer glass, crisp top rim. */
     .glass-well {
-        backdrop-filter: blur(4px);
-        background-color: rgba(255, 255, 255, 0.02);
-        border-top: 1px solid rgba(255, 255, 255, 0.4);
-        border-left: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: inset 0 4px 12px rgba(0,0,0,0.3), inset 0 0 20px rgba(255,255,255,0.1);
-    }
-    .glass-slab {
-        background: rgba(42, 42, 46, 0.7);
-        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border-top: 1px solid rgba(255, 255, 255, 0.15);
-        border-left: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
-        position: relative; overflow: hidden;
+        backdrop-filter: blur(3px) saturate(160%);
+        -webkit-backdrop-filter: blur(3px) saturate(160%);
+        background-color: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.35), inset 0 0 20px rgba(255,255,255,0.05);
     }
 
     /* --- Buttons --- */
@@ -103,19 +179,17 @@
     .primary-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
     .glass-link-btn {
         background-color: transparent; backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-top-color: rgba(255, 255, 255, 0.2);
-        border-left-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.08);         /* even, soft - no bright edge */
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: all 0.2s ease;
     }
-    .glass-link-btn:hover { background-color: rgba(255, 255, 255, 0.05); border-top-color: rgba(255, 255, 255, 0.3); }
+    .glass-link-btn:hover { background-color: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.16); }
     .glass-btn-primary {
-        background-color: #ffffff; color: #111; border: 1px solid rgba(255,255,255,0.8);
+        background-color: #ffffff; color: #111; border: none;  /* solid white - no visible outline */
         box-shadow: 0 2px 20px rgba(255,255,255,0.25); transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .glass-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(255,255,255,0.4); }
     .glass-btn-secondary {
-        background-color: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.2);
+        background-color: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); /* soft, even */
         backdrop-filter: blur(8px); transition: transform 0.2s ease, background-color 0.2s ease;
     }
     .glass-btn-secondary:hover { transform: translateY(-2px); background-color: rgba(255,255,255,0.08); }
@@ -143,6 +217,141 @@
     @keyframes fadeInUp { from {opacity:0; transform:translateY(16px);} to {opacity:1; transform:translateY(0);} }
     .animate-fadeInUp { animation: fadeInUp 0.6s ease-out forwards; }
 
+    /* --- Grading loading bar --- a seamless flowing highlight. The old bar
+       translated a single segment that spent part of its cycle off-screen (and
+       never reached the right end), so it looked like it vanished ~70% through.
+       This scrolls a repeating soft highlight so light is ALWAYS visible and the
+       loop is seamless (it scrolls exactly one 96px period). */
+    .grading-track {
+        width: 220px; height: 3px; border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden; position: relative;
+    }
+    .grading-track::before {
+        content: ""; position: absolute; top: 0; bottom: 0; left: 0;
+        width: 200%;                 /* extra width so translating never exposes a gap */
+        background: repeating-linear-gradient(90deg,
+            rgba(255,255,255,0) 0px,
+            rgba(255,255,255,0) 44px,
+            rgba(255,255,255,0.85) 60px,
+            rgba(255,255,255,0) 76px,
+            rgba(255,255,255,0) 96px);
+        animation: gradingFlow 1.1s linear infinite;
+        will-change: transform;
+    }
+    /* Translate exactly one 96px period for a seamless loop. Using transform
+       (GPU-composited) instead of background-position keeps it perfectly smooth
+       - animating background-position stutters because it repaints each frame. */
+    @keyframes gradingFlow { from { transform: translateX(0); } to { transform: translateX(-96px); } }
+
+    /* --- Error / notice modal --- glass popup that replaces browser alert() --- */
+    .modal-overlay {
+        position: fixed; inset: 0; z-index: 100;
+        display: none; align-items: center; justify-content: center; padding: 24px;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        opacity: 0; transition: opacity 0.25s ease;
+    }
+    .modal-overlay.show { display: flex; opacity: 1; }
+    .modal-card {
+        position: relative; width: 100%; max-width: 440px; text-align: center;
+        padding: 34px 32px 30px;
+        background-color: rgba(22, 22, 26, 0.55);
+        backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
+        border-radius: 30px;
+        box-shadow:
+            0 40px 90px -20px rgba(0, 0, 0, 0.92),
+            inset 0 1px 0 rgba(255, 255, 255, 0.20),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+        transform: translateY(14px) scale(0.97);
+        transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+    .modal-overlay.show .modal-card { transform: translateY(0) scale(1); }
+    .modal-icon {
+        width: 58px; height: 58px; border-radius: 9999px; margin: 0 auto 18px;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(244, 67, 54, 0.12);
+        border: 1px solid rgba(244, 67, 54, 0.38);
+        color: #ff8a80;
+        box-shadow: 0 0 26px rgba(244, 67, 54, 0.20), inset 0 0 14px rgba(244, 67, 54, 0.12);
+    }
+    .modal-icon .material-symbols-outlined { font-size: 30px; }
+
+    /* --- Nav links --- */
+    .nav-link { position: relative; padding-bottom: 4px; cursor: pointer; }
+    .nav-link-active { color: #fff; }
+    .nav-link-active::after {
+        content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+        background: #fff; border-radius: 2px;
+    }
+
+    /* --- Nav panel modal (History / Resources / Settings / Account) ---
+       Reuses the .modal-overlay backdrop; this is the larger, left-aligned card
+       for richer content (lists, forms, toggles). */
+    .nav-panel {
+        position: relative; width: 100%; max-width: 540px;
+        max-height: 82vh; display: flex; flex-direction: column;
+        background-color: rgba(20, 20, 24, 0.62);
+        backdrop-filter: blur(22px) saturate(150%); -webkit-backdrop-filter: blur(22px) saturate(150%);
+        border-radius: 26px;
+        box-shadow: 0 40px 90px -20px rgba(0,0,0,0.92), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 0 0 1px rgba(255,255,255,0.06);
+        transform: translateY(14px) scale(0.98);
+        transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+    .modal-overlay.show .nav-panel { transform: translateY(0) scale(1); }
+    .nav-panel-head {
+        display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        padding: 22px 24px 16px; border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .nav-panel-head h3 { font-size: 20px; font-weight: 600; color: #fff; }
+    .nav-close {
+        width: 34px; height: 34px; border-radius: 9999px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        color: #c4c7c8; background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s ease;
+    }
+    .nav-close:hover { color: #fff; background: rgba(255,255,255,0.12); }
+    .nav-panel-body { padding: 18px 24px 24px; overflow-y: auto; }
+
+    /* generic rows/pieces used inside nav panels */
+    .panel-row {
+        display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;
+        border-radius: 14px; background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06); margin-bottom: 10px;
+    }
+    .panel-input {
+        width: 100%; padding: 11px 14px; border-radius: 12px;
+        background: rgba(0,0,0,0.35); color: #e5e2e1;
+        border: 1px solid rgba(255,255,255,0.10); font-size: 14px; outline: none;
+        transition: border-color 0.2s ease;
+    }
+    .panel-input:focus { border-color: rgba(255,255,255,0.28); }
+    .panel-empty { text-align: center; color: #c4c7c8; opacity: 0.7; padding: 28px 10px; }
+    .icon-btn { color: #c4c7c8; transition: color 0.2s ease; cursor: pointer; }
+    .icon-btn:hover { color: #fff; }
+    .icon-btn.danger:hover { color: #ff8a80; }
+
+    /* toggle switch */
+    .switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; cursor: pointer; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch .track {
+        position: absolute; inset: 0; border-radius: 9999px;
+        background: rgba(255,255,255,0.12); transition: background 0.2s ease;
+    }
+    .switch .thumb {
+        position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+        background: #fff; transition: transform 0.2s cubic-bezier(0.2,0.9,0.3,1);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .switch input:checked + .track { background: rgba(129,199,132,0.6); }
+    .switch input:checked + .track + .thumb { transform: translateX(20px); }
+
+    /* --- Reduced motion: freeze looping animations + the background video --- */
+    .reduce-motion .grading-track::before,
+    .reduce-motion .shimmer-effect,
+    .reduce-motion .glow-pulse,
+    .reduce-motion .animate-pulse { animation: none !important; }
+
     /* --- State machine: only the active screen is shown --- */
     .screen { display: none; }
     .screen.active { display: flex; }
@@ -150,9 +359,11 @@
 </head>
 <body class="antialiased min-h-screen flex flex-col">
 
-<!-- ===================== Persistent WebGL Background ===================== -->
+<!-- ===================== Persistent Video Background ===================== -->
 <div class="fixed inset-0 w-full h-full" style="z-index:0;">
-<canvas id="shader-canvas-bg" style="display:block;width:100%;height:100%"></canvas>
+<video autoplay loop muted playsinline style="display:block;width:100%;height:100%;object-fit:cover;">
+<source src="/animated_background/white.mp4" type="video/mp4">
+</video>
 </div>
 <div class="ambient-glow"></div>
 
@@ -160,13 +371,13 @@
 <nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-padding-mobile md:px-container-padding-desktop py-4 backdrop-blur-xl bg-surface/70 border-b border-white/10 shadow-[0_40px_40px_rgba(0,0,0,0.4)]">
   <div class="font-headline-md text-headline-md font-bold text-primary cursor-pointer" onclick="goHome()">MockMentor</div>
   <div class="hidden md:flex gap-8 items-center">
-    <a class="text-primary border-b-2 border-primary pb-1 font-body-md text-body-md" href="#" onclick="goHome();return false;">Practice</a>
-    <a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#">History</a>
-    <a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#">Resources</a>
+    <a id="nav-practice" class="nav-link nav-link-active font-body-md text-body-md" href="#" onclick="goHome();return false;">Practice</a>
+    <a class="nav-link text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#" onclick="openHistory();return false;">History</a>
+    <a class="nav-link text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#" onclick="openResources();return false;">Resources</a>
   </div>
   <div class="flex gap-4">
-    <button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">settings</span></button>
-    <button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">account_circle</span></button>
+    <button title="Settings" class="text-on-surface-variant hover:text-primary transition-colors" onclick="openSettings()"><span class="material-symbols-outlined">settings</span></button>
+    <button title="Account" class="text-on-surface-variant hover:text-primary transition-colors" onclick="openAccount()"><span class="material-symbols-outlined">account_circle</span></button>
   </div>
 </nav>
 
@@ -174,7 +385,7 @@
 <!-- SCREEN 1: Subject Selector (home)                                         -->
 <!-- ========================================================================= -->
 <main id="screen-selector" class="screen active flex-grow flex-col items-center justify-center min-h-screen px-container-padding-mobile pb-24 relative z-10">
-  <div class="liquid-glass w-full max-w-[720px] rounded-[40px] p-8 md:p-12 flex flex-col gap-10 mt-24 relative overflow-hidden">
+  <div class="liquid-glass w-full max-w-[880px] rounded-[40px] p-8 md:p-12 flex flex-col gap-10 mt-24 relative overflow-hidden">
     <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
     <div class="text-center z-10">
       <h1 class="text-display-lg-mobile md:text-display-lg text-primary mb-4 tracking-tight">Choose Your Subject</h1>
@@ -196,7 +407,7 @@
 <!-- SCREEN 2: Active Question                                                 -->
 <!-- ========================================================================= -->
 <main id="screen-question" class="screen flex-grow items-center justify-center p-container-padding-mobile md:p-container-padding-desktop z-10 relative pt-24 md:pt-32 pb-24">
-  <div class="liquid-glass w-full max-w-[720px] p-8 md:p-12 relative overflow-hidden flex flex-col gap-8 rounded-[48px]">
+  <div class="liquid-glass w-full max-w-[880px] p-8 md:p-12 relative overflow-hidden flex flex-col gap-8 rounded-[48px]">
     <div class="flex items-center justify-between text-secondary-fixed-dim font-label-sm text-label-sm uppercase tracking-wider">
       <div class="flex items-center gap-3">
         <span class="material-symbols-outlined text-[16px] opacity-70">terminal</span>
@@ -222,7 +433,7 @@
 <!-- SCREEN 3: Grading (overlay-style)                                         -->
 <!-- ========================================================================= -->
 <main id="screen-grading" class="screen flex-grow items-center justify-center min-h-screen p-container-padding-mobile z-10 relative">
-  <div class="glass-slab w-full max-w-[720px] p-8 md:p-16 flex flex-col items-center justify-center text-center min-h-[400px] rounded-[48px]">
+  <div class="glass-slab w-full max-w-[880px] p-8 md:p-16 flex flex-col items-center justify-center text-center min-h-[400px] rounded-[48px]">
     <div class="glow-pulse"></div>
     <div class="shimmer-effect"></div>
     <div class="mb-8 relative">
@@ -233,20 +444,16 @@
     <div class="h-[24px] overflow-hidden relative w-full max-w-sm">
       <p id="grading-status" class="text-body-md text-on-surface-variant absolute w-full text-center transition-opacity duration-500">Referencing textbook material...</p>
     </div>
-    <div class="w-48 h-[2px] bg-white/10 rounded-full mt-12 overflow-hidden">
-      <div class="h-full bg-primary/40 rounded-full w-1/3 relative" style="animation: shimmer 2s infinite linear;">
-        <div class="absolute inset-0 bg-white/50 blur-[2px]"></div>
-      </div>
-    </div>
+    <div class="grading-track mt-12"></div>
   </div>
 </main>
 
 <!-- ========================================================================= -->
 <!-- SCREEN 4: Verdict & Feedback                                              -->
 <!-- ========================================================================= -->
-<main id="screen-verdict" class="screen flex-grow flex-col items-center justify-center pt-32 pb-24 px-container-padding-mobile md:px-container-padding-desktop relative z-10 w-full max-w-4xl mx-auto">
+<main id="screen-verdict" class="screen flex-grow flex-col items-center justify-center pt-32 pb-24 px-container-padding-mobile md:px-container-padding-desktop relative z-10 w-full max-w-5xl mx-auto">
   <!-- Progress -->
-  <div class="w-full max-w-2xl mb-12 flex flex-col gap-2">
+  <div class="w-full max-w-3xl mb-12 flex flex-col gap-2">
     <div class="flex justify-between items-center px-1">
       <span id="v-progress-label" class="text-label-sm text-on-surface-variant">Question 1 of 10</span>
       <span class="text-label-sm text-on-surface-variant">Operating Systems</span>
@@ -257,7 +464,7 @@
   </div>
 
   <!-- Verdict card -->
-  <div class="liquid-glass w-full max-w-2xl md:p-12 flex flex-col gap-8 relative overflow-hidden rounded-[48px] p-6">
+  <div class="liquid-glass w-full max-w-3xl md:p-12 flex flex-col gap-8 relative overflow-hidden rounded-[48px] p-6">
     <div class="flex flex-col gap-4 items-center text-center">
       <div id="v-chip" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full verdict-chip-amber">
         <span id="v-chip-icon" class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1;">warning</span>
@@ -294,7 +501,7 @@
   </div>
 
   <!-- Follow-up -->
-  <div class="mt-12 w-full max-w-2xl flex flex-col items-center gap-8 animate-fadeInUp">
+  <div class="mt-12 w-full max-w-3xl flex flex-col items-center gap-8 animate-fadeInUp">
     <div class="text-center flex flex-col gap-3">
       <span class="text-label-sm text-on-surface-variant uppercase tracking-widest">Follow-up</span>
       <p id="v-followup" class="text-body-lg text-primary max-w-lg mx-auto">—</p>
@@ -311,52 +518,161 @@
   </div>
 </main>
 
-<!-- ===================== WebGL background shader ===================== -->
+<!-- ===================== Error / notice modal ===================== -->
+<div id="error-modal" class="modal-overlay" onclick="if (event.target === this) hideError()">
+  <div class="modal-card">
+    <div class="modal-icon"><span id="error-icon" class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">error</span></div>
+    <h3 id="error-title" class="text-headline-md text-primary mb-2">Something went wrong</h3>
+    <p id="error-message" class="text-body-md text-on-surface-variant mb-7 leading-relaxed">Please try again.</p>
+    <button class="primary-btn text-label-sm font-semibold rounded-full px-8 py-3" onclick="hideError()">Got it</button>
+  </div>
+</div>
+
+<!-- ===================== Nav panel modal (History / Resources / Settings / Account) ===================== -->
+<div id="nav-modal" class="modal-overlay" onclick="if (event.target === this) closeNav()">
+  <div class="nav-panel">
+    <div class="nav-panel-head">
+      <h3 id="nav-title">Panel</h3>
+      <button class="nav-close" onclick="closeNav()" title="Close"><span class="material-symbols-outlined text-[20px]">close</span></button>
+    </div>
+    <div id="nav-body" class="nav-panel-body"></div>
+  </div>
+</div>
+
+<!-- ============ Adaptive glass lighting ============
+     Background-agnostic: we sample whatever media sits in the background layer
+     (a <video>, <canvas>, or <img>) into a tiny offscreen buffer each frame and
+     read the REAL brightness behind every glass panel. Each panel edge is lit in
+     proportion to the light actually behind it (--rt/--rb/--rl/--rr), and the
+     specular bloom sits at the brightest sampled point (--glow-x/y, intensity
+     --glow-i). If the background is dark - or can't be sampled at all - every
+     value is 0, so the glass shows no reflection. Drop in any background and the
+     glass reacts to it; no formula is tied to a specific shader. -->
 <script>
 (function() {
-  const canvas = document.getElementById('shader-canvas-bg');
-  function syncSize() {
-    const w = canvas.clientWidth || 1280, h = canvas.clientHeight || 720;
-    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+  // The media element inside the fixed background container.
+  const media = document.querySelector('.fixed.inset-0 video, .fixed.inset-0 canvas, .fixed.inset-0 img');
+
+  // Tiny offscreen buffer we downscale the background into for sampling.
+  const SW = 96, SH = 54;
+  const buf = document.createElement('canvas');
+  buf.width = SW; buf.height = SH;
+  const bctx = buf.getContext('2d', { willReadFrequently: true });
+  let pixels = null;
+
+  // Perceptual luma (0..1) at a background pixel, clamped to the buffer.
+  function lum(x, y) {
+    x = x < 0 ? 0 : (x >= SW ? SW - 1 : x);
+    y = y < 0 ? 0 : (y >= SH ? SH - 1 : y);
+    const i = ((y | 0) * SW + (x | 0)) * 4;
+    return (0.2126 * pixels[i] + 0.7152 * pixels[i + 1] + 0.0722 * pixels[i + 2]) / 255;
   }
-  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(syncSize).observe(canvas);
-  syncSize();
-  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-  if (!gl) return;
-  const vs = `attribute vec2 a_position; varying vec2 v_texCoord;
-    void main(){ v_texCoord = a_position*0.5+0.5; gl_Position = vec4(a_position,0.0,1.0); }`;
-  const fs = `precision highp float; uniform float u_time; uniform vec2 u_resolution; varying vec2 v_texCoord;
-    void main(){
-      vec2 uv = v_texCoord - 0.5;
-      float angle = -u_time * 0.5;
-      float aspect = u_resolution.x / u_resolution.y;
-      vec2 light_origin = vec2(cos(angle)*0.85*aspect, sin(angle)*0.85);
-      vec2 uv_scaled = uv; uv_scaled.x *= aspect;
-      vec2 diff = uv_scaled - light_origin; diff.x /= aspect;
-      float d = length(diff);
-      float gradient = smoothstep(0.8, 0.0, d); gradient = pow(gradient, 1.5);
-      vec3 final_color = mix(vec3(0.0), vec3(1.0), gradient);
-      gl_FragColor = vec4(final_color, 1.0);
-    }`;
-  function cs(t, s){ const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); return sh; }
-  const prog = gl.createProgram();
-  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
-  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
-  gl.linkProgram(prog); gl.useProgram(prog);
-  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
-  const pos = gl.getAttribLocation(prog, 'a_position');
-  gl.enableVertexAttribArray(pos); gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
-  const uTime = gl.getUniformLocation(prog, 'u_time'), uRes = gl.getUniformLocation(prog, 'u_resolution');
-  function render(t){
-    if (typeof ResizeObserver === 'undefined') syncSize();
-    gl.viewport(0,0,canvas.width,canvas.height);
-    if (uTime) gl.uniform1f(uTime, t*0.001);
-    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    requestAnimationFrame(render);
+  // Average luma over a box in background-pixel space.
+  function boxLum(x0, y0, x1, y1) {
+    let s = 0, n = 0;
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { s += lum(x, y); n++; }
+    return n ? s / n : 0;
   }
-  render(0);
+  // Emphasise real highlights, ignore dim ambient -> dark bg gives 0.
+  function shape(v) { const t = (v - 0.14) / 0.86; return t <= 0 ? 0 : Math.pow(t, 1.4); }
+
+  // MAIN panels only. Inner cards no longer react to the background - selection
+  // is shown with a permanent CSS glow instead.
+  const PANELS = () => document.querySelectorAll('.liquid-glass, .glass-slab');
+
+  // Per-panel smoothed state. We ease every value toward its freshly-sampled
+  // target instead of snapping to it, which kills the frame-to-frame flicker
+  // that raw video sampling produces (compression noise + the pow() shaping
+  // amplify tiny brightness jumps). SMOOTH is the low-pass factor: smaller =
+  // smoother/slower to react. POS_SMOOTH is separate (and smaller) because the
+  // brightest-pixel position hops around the most.
+  const SMOOTH = 0.08;
+  const POS_SMOOTH = 0.06;
+  const EDGE_SMOOTH = 0.05;   // extra-gentle easing for the border rim -> smoother reflections
+  const stateMap = new WeakMap();
+
+  function getState(el) {
+    let s = stateMap.get(el);
+    if (!s) { s = { rt: 0, rb: 0, rl: 0, rr: 0, gi: 0, gx: 50, gy: 50 }; stateMap.set(el, s); }
+    return s;
+  }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function clearAll() {
+    PANELS().forEach(el => {
+      const s = getState(el);
+      // Ease down to zero too, so removing light fades rather than snaps.
+      s.rt = lerp(s.rt, 0, EDGE_SMOOTH); s.rb = lerp(s.rb, 0, EDGE_SMOOTH);
+      s.rl = lerp(s.rl, 0, EDGE_SMOOTH); s.rr = lerp(s.rr, 0, EDGE_SMOOTH);
+      s.gi = lerp(s.gi, 0, SMOOTH);
+      el.style.setProperty('--rt', s.rt.toFixed(3)); el.style.setProperty('--rb', s.rb.toFixed(3));
+      el.style.setProperty('--rl', s.rl.toFixed(3)); el.style.setProperty('--rr', s.rr.toFixed(3));
+      el.style.setProperty('--glow-i', s.gi.toFixed(3));
+    });
+  }
+
+  function frame() {
+    // Reduced-motion: freeze reflections (skip sampling) but keep the loop alive
+    // so it resumes instantly when re-enabled.
+    if (window.motionReduced) { requestAnimationFrame(frame); return; }
+    let ok = false;
+    if (media) {
+      try { bctx.drawImage(media, 0, 0, SW, SH); pixels = bctx.getImageData(0, 0, SW, SH).data; ok = true; }
+      catch (e) { ok = false; }   // not ready / cross-origin -> no reflection
+    }
+    if (!ok) { clearAll(); requestAnimationFrame(frame); return; }
+
+    const sx = SW / window.innerWidth, sy = SH / window.innerHeight;
+    const band = 3;   // edge sample thickness, in background pixels
+
+    PANELS().forEach(el => {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return;   // hidden screen
+      const s = getState(el);
+      const bx0 = r.left * sx, by0 = r.top * sy, bx1 = r.right * sx, by1 = r.bottom * sy;
+      // Per-edge brightness: a band straddling each edge.
+      const rt = shape(boxLum(bx0 | 0, (by0 - band) | 0, bx1 | 0, (by0 + band) | 0));
+      const rb = shape(boxLum(bx0 | 0, (by1 - band) | 0, bx1 | 0, (by1 + band) | 0));
+      const rl = shape(boxLum((bx0 - band) | 0, by0 | 0, (bx0 + band) | 0, by1 | 0));
+      const rr = shape(boxLum((bx1 - band) | 0, by0 | 0, (bx1 + band) | 0, by1 | 0));
+      // Ease toward the sampled targets (temporal low-pass -> no flicker).
+      s.rt = lerp(s.rt, rt, EDGE_SMOOTH); s.rb = lerp(s.rb, rb, EDGE_SMOOTH);
+      s.rl = lerp(s.rl, rl, EDGE_SMOOTH); s.rr = lerp(s.rr, rr, EDGE_SMOOTH);
+      el.style.setProperty('--rt', s.rt.toFixed(3));
+      el.style.setProperty('--rb', s.rb.toFixed(3));
+      el.style.setProperty('--rl', s.rl.toFixed(3));
+      el.style.setProperty('--rr', s.rr.toFixed(3));
+      // Specular bloom. The old code tracked the single brightest pixel, which
+      // TELEPORTS between separate highlights as the background moves - and no
+      // amount of easing hides a target that jumps across the panel. Instead we
+      // take a brightness-weighted CENTROID of all the highlights in the panel
+      // footprint (a continuous position that drifts smoothly) plus a
+      // 2x2-averaged PEAK for intensity (denoised, so it doesn't strobe near the
+      // highlight threshold).
+      let wsum = 0, xsum = 0, ysum = 0, peak = 0;
+      const gx0 = Math.max(0, bx0 | 0), gy0 = Math.max(0, by0 | 0);
+      const gx1 = Math.min(SW - 2, bx1 | 0), gy1 = Math.min(SH - 2, by1 | 0);
+      for (let y = gy0; y <= gy1; y += 3) for (let x = gx0; x <= gx1; x += 3) {
+        const l = (lum(x, y) + lum(x + 1, y) + lum(x, y + 1) + lum(x + 1, y + 1)) * 0.25;
+        const w = shape(l);
+        if (w > 0) { wsum += w; xsum += w * x; ysum += w * y; if (l > peak) peak = l; }
+      }
+      let gxTarget = s.gx, gyTarget = s.gy, giTarget = 0;
+      if (wsum > 0) {
+        gxTarget = ((xsum / wsum / sx) - r.left) / r.width * 100;
+        gyTarget = ((ysum / wsum / sy) - r.top) / r.height * 100;
+        giTarget = shape(peak);
+      }
+      s.gx = lerp(s.gx, gxTarget, POS_SMOOTH);
+      s.gy = lerp(s.gy, gyTarget, POS_SMOOTH);
+      s.gi = lerp(s.gi, giTarget, SMOOTH);
+      el.style.setProperty('--glow-x', s.gx.toFixed(1) + '%');
+      el.style.setProperty('--glow-y', s.gy.toFixed(1) + '%');
+      el.style.setProperty('--glow-i', s.gi.toFixed(3));
+    });
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
 })();
 </script>
 
@@ -370,7 +686,16 @@ const state = {
   total: 10,             // count in the bank
   question: '',          // the question currently being asked
   isFollowup: false,     // true when the active question came from a follow-up
+  history: [],           // this session's graded answers (for the History panel)
 };
+
+// Custom resources persist across reloads via localStorage (no backend yet).
+function loadCustomResources() {
+  try { return JSON.parse(localStorage.getItem('mm_resources') || '[]'); } catch (e) { return []; }
+}
+function saveCustomResources(list) {
+  try { localStorage.setItem('mm_resources', JSON.stringify(list)); } catch (e) {}
+}
 
 // ---- Screen switching ----
 function showScreen(id) {
@@ -378,6 +703,182 @@ function showScreen(id) {
   document.getElementById('screen-' + id).classList.add('active');
   window.scrollTo(0, 0);
 }
+
+// ---- Error popup (replaces browser alert) ----
+function showError(message, title, icon) {
+  document.getElementById('error-title').textContent = title || 'Something went wrong';
+  document.getElementById('error-message').textContent = message || 'Please try again.';
+  document.getElementById('error-icon').textContent = icon || 'error';
+  document.getElementById('error-modal').classList.add('show');
+}
+function hideError() { document.getElementById('error-modal').classList.remove('show'); }
+
+// ================= Nav panels (History / Resources / Settings / Account) =====
+function openNav(title, html) {
+  document.getElementById('nav-title').textContent = title;
+  document.getElementById('nav-body').innerHTML = html;
+  document.getElementById('nav-modal').classList.add('show');
+}
+function closeNav() { document.getElementById('nav-modal').classList.remove('show'); }
+
+const VERDICT_STYLE = {
+  'Correct':           { cls: 'verdict-chip-green', icon: 'check_circle' },
+  'Partially Correct': { cls: 'verdict-chip-amber', icon: 'warning' },
+  'Incorrect':         { cls: 'verdict-chip-red',   icon: 'cancel' },
+};
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ---- History ----
+function openHistory() {
+  let body;
+  if (!state.history.length) {
+    body = `<div class="panel-empty">
+      <span class="material-symbols-outlined text-[40px] opacity-60">history</span>
+      <p class="mt-2">No answers yet this session.</p>
+      <p class="text-label-sm mt-1">Grade an answer and it'll show up here.</p>
+    </div>`;
+  } else {
+    body = state.history.map((h, i) => {
+      const v = VERDICT_STYLE[h.verdict] || { cls: 'verdict-chip-red', icon: 'help' };
+      return `<div class="panel-row" style="flex-direction:column; gap:8px;">
+        <div class="flex items-center justify-between w-full gap-3">
+          <span class="text-label-sm text-on-surface-variant">Q${i + 1}${h.isFollowup ? ' · follow-up' : ''}</span>
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-label-sm ${v.cls}">
+            <span class="material-symbols-outlined text-[15px]" style="font-variation-settings:'FILL' 1;">${v.icon}</span>
+            ${escapeHtml(h.verdict)} · ${h.score ?? '—'}/5
+          </span>
+        </div>
+        <p class="text-body-md text-on-surface leading-snug">${escapeHtml(h.question)}</p>
+      </div>`;
+    }).join('');
+    const avg = (state.history.reduce((a, h) => a + (Number(h.score) || 0), 0) / state.history.length).toFixed(1);
+    body = `<p class="text-label-sm text-on-surface-variant mb-3">${state.history.length} answered · avg score ${avg}/5</p>` + body;
+  }
+  openNav('Session History', body);
+}
+
+// ---- Resources ----
+function openResources() {
+  const chapters = [
+    'Introduction to OS', 'Scheduling Intro', 'Address Spaces',
+    'Concurrency Intro', 'Concurrency Problems (Deadlocks)',
+  ];
+  const chapterList = chapters.map(c =>
+    `<div class="flex items-center gap-2 text-body-md text-on-surface-variant py-1">
+       <span class="material-symbols-outlined text-[16px] opacity-70">menu_book</span>${c}</div>`).join('');
+
+  const custom = loadCustomResources();
+  const customList = custom.length
+    ? custom.map((r, i) => `
+        <div class="panel-row items-center justify-between">
+          <div class="min-w-0">
+            <div class="text-body-md text-on-surface truncate">${escapeHtml(r.name)}</div>
+            ${r.url ? `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener" class="text-label-sm text-on-surface-variant hover:text-primary underline truncate block">${escapeHtml(r.url)}</a>` : ''}
+          </div>
+          <span class="material-symbols-outlined icon-btn danger" title="Remove" onclick="removeCustomResource(${i})">delete</span>
+        </div>`).join('')
+    : `<p class="text-label-sm text-on-surface-variant opacity-70 mb-2">No custom resources yet.</p>`;
+
+  const body = `
+    <div class="mb-6">
+      <div class="text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Course corpus</div>
+      <div class="panel-row" style="flex-direction:column; gap:6px;">
+        <div class="text-body-md text-on-surface font-medium">Operating Systems: Three Easy Pieces (OSTEP)</div>
+        <div class="text-label-sm text-on-surface-variant">The grounding source for grading. 5 chapters indexed:</div>
+        ${chapterList}
+        <a href="https://pages.cs.wisc.edu/~remzi/OSTEP/" target="_blank" rel="noopener"
+           class="text-label-sm text-primary underline mt-1 inline-flex items-center gap-1">
+           <span class="material-symbols-outlined text-[15px]">open_in_new</span>Open OSTEP (free)</a>
+      </div>
+    </div>
+    <div>
+      <div class="text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Your resources</div>
+      <div id="custom-resource-list">${customList}</div>
+      <div class="flex flex-col gap-2 mt-3">
+        <input id="res-name" class="panel-input" placeholder="Resource name (e.g. My notes)">
+        <input id="res-url" class="panel-input" placeholder="Link (optional, https://…)">
+        <button class="primary-btn text-label-sm font-semibold rounded-full px-6 py-2.5 mt-1 self-start flex items-center gap-2"
+                onclick="addCustomResource()">
+          <span class="material-symbols-outlined text-[18px]">add</span>Add resource</button>
+      </div>
+    </div>`;
+  openNav('Resources', body);
+}
+function addCustomResource() {
+  const name = document.getElementById('res-name').value.trim();
+  const url = document.getElementById('res-url').value.trim();
+  if (!name) { document.getElementById('res-name').focus(); return; }
+  const list = loadCustomResources();
+  list.push({ name, url });
+  saveCustomResources(list);
+  openResources();   // re-render
+}
+function removeCustomResource(i) {
+  const list = loadCustomResources();
+  list.splice(i, 1);
+  saveCustomResources(list);
+  openResources();
+}
+
+// ---- Settings ----
+function openSettings() {
+  const reduced = document.documentElement.classList.contains('reduce-motion');
+  const body = `
+    <div class="panel-row items-center justify-between">
+      <div>
+        <div class="text-body-md text-on-surface">Reduce motion</div>
+        <div class="text-label-sm text-on-surface-variant">Pause the background video and looping animations.</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" ${reduced ? 'checked' : ''} onchange="toggleReduceMotion(this.checked)">
+        <span class="track"></span><span class="thumb"></span>
+      </label>
+    </div>
+    <div class="panel-row" style="flex-direction:column; gap:6px;">
+      <div class="text-label-sm text-on-surface-variant uppercase tracking-wider">Model</div>
+      <div class="flex items-center gap-2 text-body-md text-on-surface">
+        <span class="material-symbols-outlined text-[18px]">smart_toy</span>qwen3:8b · local via Ollama</div>
+      <div class="text-label-sm text-on-surface-variant">Grading runs entirely on your machine — nothing leaves it.</div>
+    </div>`;
+  openNav('Settings', body);
+}
+function toggleReduceMotion(on) {
+  document.documentElement.classList.toggle('reduce-motion', on);
+  window.motionReduced = on;
+  const vid = document.querySelector('.fixed.inset-0 video');
+  if (vid) { on ? vid.pause() : vid.play().catch(() => {}); }
+  try { localStorage.setItem('mm_reduce_motion', on ? '1' : '0'); } catch (e) {}
+}
+
+// ---- Account ----
+function openAccount() {
+  const answered = state.history.length;
+  const body = `
+    <div class="flex items-center gap-4 mb-5">
+      <div class="w-14 h-14 rounded-full flex items-center justify-center bg-white/8 border border-white/12">
+        <span class="material-symbols-outlined text-[30px] text-primary">account_circle</span>
+      </div>
+      <div>
+        <div class="text-body-lg text-on-surface font-medium">Guest</div>
+        <div class="text-label-sm text-on-surface-variant">Local session · no account needed</div>
+      </div>
+    </div>
+    <div class="panel-row items-center justify-between">
+      <span class="text-body-md text-on-surface-variant">Answers this session</span>
+      <span class="text-body-md text-primary font-medium">${answered}</span>
+    </div>
+    <button class="glass-btn-secondary text-label-sm rounded-full px-6 py-2.5 mt-2 flex items-center gap-2"
+            onclick="clearHistory()">
+      <span class="material-symbols-outlined text-[18px]">delete_sweep</span>Clear session history</button>`;
+  openNav('Account', body);
+}
+function clearHistory() { state.history = []; openAccount(); }
+
+// Dismiss modals on Escape.
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { hideError(); closeNav(); } });
 
 // ---- Grading status rotation (only runs while grading screen is up) ----
 const GRADING_MESSAGES = [
@@ -404,7 +905,9 @@ async function loadSubjects() {
     const res = await fetch('/api/subjects');
     state.subjects = await res.json();
   } catch (e) {
-    grid.innerHTML = '<p class="text-[#e57373] col-span-2 text-center">Could not reach the server. Is it running?</p>';
+    grid.innerHTML = '<p class="text-on-surface-variant col-span-2 text-center opacity-70">Waiting for the server…</p>';
+    showError('Could not reach the MockMentor server. Start it with "python src/server.py" and refresh.',
+      'Server unreachable', 'cloud_off');
     return;
   }
   grid.innerHTML = '';
@@ -458,14 +961,15 @@ async function loadQuestion() {
   try {
     const res = await fetch(`/api/question?subject=${state.selectedSubject}&index=${state.index}`);
     const data = await res.json();
-    if (data.error) { alert(data.error); return; }
+    if (data.error) { showError(data.error, "Couldn't load the question"); return; }
     state.question = data.question;
     state.total = data.total;
     state.index = data.index;
     renderQuestion();
     showScreen('question');
   } catch (e) {
-    alert('Could not load the question. Is the server running?');
+    showError('Could not load the question. Make sure the server is running (python src/server.py).',
+      'Server unreachable', 'cloud_off');
   }
 }
 
@@ -498,12 +1002,28 @@ async function submitAnswer() {
     });
     const result = await res.json();
     stopGradingAnimation();
-    if (result.error) { alert(result.error); showScreen('question'); return; }
+    if (result.error) {
+      // The server sends a clear message (e.g. Ollama not running). Use a
+      // model-flavoured icon when it's about the local model.
+      const modelIssue = /ollama|model|qwen/i.test(result.error);
+      showError(result.error, modelIssue ? 'Model not reachable' : "Couldn't grade your answer",
+        modelIssue ? 'smart_toy' : 'error');
+      showScreen('question');
+      return;
+    }
+    // Record this answer for the History panel.
+    state.history.push({
+      question: state.question,
+      verdict: result.verdict,
+      score: result.score,
+      isFollowup: state.isFollowup,
+    });
     renderVerdict(result);
     showScreen('verdict');
   } catch (e) {
     stopGradingAnimation();
-    alert('Grading failed. Is Ollama running with qwen3:8b?');
+    showError('The grader didn\'t respond. Make sure Ollama is running with qwen3:8b (try "ollama list").',
+      'Model not reachable', 'smart_toy');
     showScreen('question');
   }
 }
@@ -563,6 +1083,7 @@ function answerFollowup() {
 
 function goHome() {
   stopGradingAnimation();
+  closeNav();
   state.isFollowup = false;
   state.index = 0;
   showScreen('selector');
@@ -571,6 +1092,12 @@ function goHome() {
 
 // ---- Boot ----
 loadSubjects();
+
+// Restore the reduced-motion preference from a previous visit.
+try {
+  if (localStorage.getItem('mm_reduce_motion') === '1') toggleReduceMotion(true);
+} catch (e) {}
+
 </script>
 </body>
 </html>

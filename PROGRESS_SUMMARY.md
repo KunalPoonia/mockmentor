@@ -1,6 +1,6 @@
 # MockMentor - Complete Progress Summary
 it's a personal/supplementary log, not the official status doc
-**Last Updated:** July 2, 2026
+**Last Updated:** July 6, 2026
 
 ---
 
@@ -145,7 +145,7 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 
 ---
 
-## 🎯 Current Status: Step 2.5 Complete — Full RAG Loop Demoable ✅
+## 🎯 Current Status: Step 2.7 Complete — Full Web App Shipped ✅
 
 ### **What's Working:**
 ✅ Local LLM inference (Ollama + qwen3:8b, llama3.1:8b fallback)  
@@ -157,15 +157,21 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 ✅ **`src/ingest.py` built & verified — 79 chunks across 5 chapters**  
 ✅ **`src/embed_store.py` built & verified — 79 chunks embedded into ChromaDB (`ostep` collection)**  
 ✅ **`src/retrieve.py` built & verified — top-k (k=3) semantic retrieval, known questions hit the right chapter**  
-✅ **`src/evaluate.py` built & verified — RAG-grounded grading + adaptive follow-up (qwen3:8b, JSON output)**  
-✅ **`src/app.py` built & verified — Streamlit UI wiring the full loop; boots headless with no errors**  
+✅ **`src/evaluate.py` built & verified — RAG-grounded grading + `model_answer` + adaptive follow-up (qwen3:8b, JSON output)**  
+✅ **`src/app.py` built & verified — Streamlit UI (now the lightweight *testing* front end)**  
+✅ **`src/server.py` + `src/questions.py` — Flask backend: serves the SPA + `/api/subjects`, `/api/question`, `/api/grade`; hardened error responses**  
+✅ **`UI/index.html` — single-page liquid-glass web app (the primary UI): selector → question → grading → verdict → follow-up loop**  
+✅ **Adaptive glass lighting** — background-agnostic reflections that sample the live background and light each panel edge; smooth, flicker-free  
+✅ **Styled error popups** (Ollama down / server unreachable) replacing browser `alert()`  
+✅ **Functional navbar** — History (session log), Resources (corpus + add custom resources), Settings (reduce-motion + model info), Account (guest)  
 
-### **What's Next (Week 3 - Hardening & Polish):**
+### **What's Next (Week 3 - Hardening & backend follow-ups):**
 ⏳ Add 1–2 tests in `tests/` (retrieve hits right chapter; evaluate returns valid JSON schema)  
-⏳ Manual QA pass over the Streamlit app (edge cases: empty answer, Ollama down, cold-start latency)  
-⏳ Optional: promote the `stitch_mockmentor_liquid_glass_ui/` mockups into the real frontend  
+⏳ Wire **custom resources** (currently localStorage-only) into the RAG corpus — the deferred backend step  
+⏳ Optional: **difficulty selector** (Mid/Senior/Staff) that adjusts grading strictness (`evaluate.py` + `server.py`)  
+⏳ Decide on the two `UI/animated_background/*.mp4` files — commit or gitignore (~19 MB)  
 
-**UI note:** for first testing and iteration we're using **Streamlit only** (`app.py`). The `stitch_mockmentor_liquid_glass_ui/` design mockups are parked for a later polish pass.  
+**UI note:** the **Flask web app (`UI/index.html`)** is now the primary front end; **Streamlit (`app.py`)** is kept as the lightweight testing UI. The liquid-glass mockups under `UI/` were merged into the single-page app.  
 
 ---
 
@@ -412,6 +418,42 @@ The feedback cites the actual OSTEP page — the core payoff of grounding gradin
 - [x] Verified: boots headless (`streamlit run src/app.py --server.headless true`) with Local/Network/External URLs and **no tracebacks**
 
 **Gotcha documented in README:** running a bare `streamlit`/`python` from a plain terminal uses the *global* Python and fails with `No module named chromadb`. Fix: activate the venv first (or call `venv\Scripts\streamlit run src/app.py` directly).
+
+---
+
+### **Step 2.6 - Flask Backend + Web UI Wiring** ✅ DONE (Jul 2)
+**Goal:** Serve a real web front end and expose the RAG pipeline over HTTP (the browser can't call Python directly).
+
+**What was built:**
+- [x] `src/server.py` (Flask): serves the single-page app and a small JSON API
+  - `GET /api/subjects` — subject catalogue for the selector
+  - `GET /api/question` — seed question by subject + index (10 per session)
+  - `POST /api/grade` — `{question, answer}` → full graded result (reuses `retrieve.py` → `evaluate.py`)
+  - ChromaDB collection opened **once at startup** and shared across requests
+  - **Hardened errors:** returns clean JSON (503 "Ollama not running", etc.) instead of raw 500 HTML
+- [x] `src/questions.py`: shared question bank + subject catalogue (used by both Flask and Streamlit)
+- [x] Added `flask>=3.0.0` to `requirements.txt`; verified a real grade round-trips (HTTP 200, grounded in OSTEP pages)
+- [x] Added `model_answer` field to `evaluate.py` — shows students an exemplar answer alongside feedback
+
+---
+
+### **Step 2.7 - Liquid-Glass Single-Page Web App** ✅ DONE (Jul 6)
+**Goal:** A polished, self-contained front end that walks through the whole flow.
+
+**What was built (`UI/index.html`):**
+- [x] **Merged the 4 Stitch mockups into one SPA** — a JS state machine (selector → question → grading → verdict) with a persistent animated background, no page reloads
+- [x] **Home = subject selector** (Operating Systems live; others "Coming soon"); flow loops via the adaptive follow-up
+- [x] **Adaptive glass lighting** — samples the live background (video/canvas/image) each frame and reflects real light per panel edge; even thickness, no static border line, temporally smoothed (centroid bloom + eased edges) so it never flickers or stutters
+- [x] **Grading loading bar** — seamless GPU-composited flow (no disappearing/stutter)
+- [x] **Styled error modals** — "Model not reachable" / "Server unreachable" with helpful text (replaces `alert()`)
+- [x] **Functional navbar:**
+  - **History** — live session log of graded answers (verdict chips + scores, avg)
+  - **Resources** — OSTEP corpus + chapters + link, plus **add/remove custom resources** (localStorage; backend deferred)
+  - **Settings** — reduce-motion toggle (pauses video + animations, persisted) + local-model info
+  - **Account** — guest profile, answers-this-session count, clear history
+- [x] Verified each screen + panel renders headless (Chrome), no JS errors
+
+**Note:** custom resources are **client-side only** for now (localStorage) — feeding them into the RAG corpus is a planned backend step.
 
 ---
 
