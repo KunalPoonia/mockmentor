@@ -140,25 +140,41 @@
         -webkit-backdrop-filter: blur(6px) saturate(120%) brightness(0.75);
         border: none;
         box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), inset 0 0 14px rgba(0,0,0,0.5), 0 10px 30px -12px rgba(0,0,0,0.7);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        /* Scoped, spring-like easing (not `all`) for a smoother lift + glow. */
+        transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+                    box-shadow 0.4s ease, background-color 0.3s ease;
     }
-    .glass-card:not(.disabled):hover, .glass-card.active {
-        background-color: rgba(20, 20, 24, 0.8);
-        transform: translateY(-2px);
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10), 0 20px 40px -10px rgba(0, 0, 0, 0.6);
-    }
-    /* Selected card: a PERMANENT glow (static, independent of the background) -
-       inner panels no longer track the background, so selection is shown with a
-       steady halo + ring + inner sheen instead of a reflection. */
+    /* Selected card: steady, subtle ring + brighter surface. The GLOW is a hover
+       effect now (below); selection is shown by this quiet ring and the pulsing
+       top-right dot, so it no longer looks "lit only when idle". */
     .glass-card.active {
+        background-color: rgba(22, 22, 26, 0.82);
         box-shadow:
-            0 0 0 1px rgba(255,255,255,0.45),          /* crisp selection ring */
-            0 0 30px rgba(255,255,255,0.22),           /* permanent outer glow */
-            inset 0 0 26px rgba(255,255,255,0.10),     /* inner sheen */
+            0 0 0 1px rgba(255,255,255,0.30),          /* quiet selection ring */
+            inset 0 1px 0 rgba(255,255,255,0.22),      /* top light */
+            0 14px 34px -14px rgba(0, 0, 0, 0.6);
+    }
+    /* Hover on any AVAILABLE card (selected or not): lift + glow. Higher
+       specificity than .active, so the glow always shows while hovering. */
+    .glass-card:not(.disabled):hover {
+        transform: translateY(-5px) scale(1.015);
+        background-color: rgba(28, 28, 33, 0.88);
+        box-shadow:
+            0 0 0 1px rgba(255,255,255,0.42),          /* crisp ring */
+            0 0 40px rgba(255,255,255,0.22),           /* the glow */
+            inset 0 0 28px rgba(255,255,255,0.09),     /* inner sheen */
             inset 0 1px 0 rgba(255,255,255,0.30),      /* top light */
-            0 20px 40px -10px rgba(0, 0, 0, 0.5);
+            0 26px 52px -14px rgba(0, 0, 0, 0.62);
     }
     .glass-card.disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Selection dot (top-right): solid white + gentle pulse when selected. */
+    @keyframes dotPulse {
+        0%, 100% { box-shadow: 0 0 6px rgba(255,255,255,0.5);  opacity: 0.85; }
+        50%      { box-shadow: 0 0 14px rgba(255,255,255,0.95); opacity: 1; }
+    }
+    .subject-dot { transition: all 0.3s ease; }
+    .subject-dot.on { background: #fff; border-color: transparent; animation: dotPulse 2.4s ease-in-out infinite; }
 
     /* Nested wells (model answer / sources): clearer glass, crisp top rim. */
     .glass-well {
@@ -359,6 +375,69 @@
     .switch input:checked + .track { background: rgba(129,199,132,0.6); }
     .switch input:checked + .track + .thumb { transform: translateX(20px); }
 
+    /* --- Full-page History / Resources helpers (static glass, not sampled by
+       the adaptive-lighting loop, so long lists stay cheap to render) --- */
+    .stat-tile {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 18px; padding: 16px 18px;
+        display: flex; flex-direction: column; gap: 2px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+    }
+    /* Inner answer card - lives INSIDE the History glass panel, so it's a light
+       raised tile (not another glass layer) to keep text crisp and bright. */
+    .log-entry {
+        background: rgba(255,255,255,0.055);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 20px; padding: 20px 22px;
+        display: flex; flex-direction: column; gap: 12px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    .page-head-title { font-weight: 600; letter-spacing: -0.02em; }
+
+    /* --- Collapsible subject dropdown (Resources corpus) --- */
+    .accordion {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 18px; overflow: hidden;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .accordion-head {
+        width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 14px;
+        padding: 16px 18px; cursor: pointer; text-align: left; background: transparent; border: none;
+        transition: background 0.2s ease;
+    }
+    .accordion-head:hover { background: rgba(255,255,255,0.04); }
+    .accordion-head:disabled { cursor: default; opacity: 0.55; }
+    .accordion-chevron { color: #c4c7c8; transition: transform 0.3s cubic-bezier(0.2,0.9,0.3,1); }
+    .accordion.open .accordion-chevron { transform: rotate(180deg); }
+    /* grid-rows 0fr -> 1fr animates height smoothly regardless of content size */
+    .accordion-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.32s cubic-bezier(0.2,0.9,0.3,1); }
+    .accordion.open .accordion-body { grid-template-rows: 1fr; }
+    .accordion-body > .accordion-inner { overflow: hidden; min-height: 0; }
+    .accordion-inner-pad { padding: 0 18px 18px; display: flex; flex-direction: column; gap: 8px; }
+
+    /* Custom-resource list: cap height + scroll internally so a long list never
+       pushes the rest of the page (or the Add control) out of reach. */
+    .resource-scroll { max-height: 320px; overflow-y: auto; padding-right: 4px; }
+    .resource-scroll::-webkit-scrollbar { width: 8px; }
+    .resource-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 8px; }
+    .resource-scroll::-webkit-scrollbar-track { background: transparent; }
+
+    /* Upload dropzone (browse / drag & drop) */
+    .dropzone {
+        border: 1.5px dashed rgba(255,255,255,0.22);
+        border-radius: 16px; padding: 22px 18px; text-align: center;
+        color: #c4c7c8; cursor: pointer;
+        background: rgba(255,255,255,0.02);
+        transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+    .dropzone:hover, .dropzone.dragover {
+        border-color: rgba(255,255,255,0.55);
+        background: rgba(255,255,255,0.06); color: #fff;
+    }
+    .dropzone.dragover { border-style: solid; }
+
     /* --- Reduced motion: freeze looping animations + the background video --- */
     .reduce-motion .grading-track::before,
     .reduce-motion .grading-track::after,
@@ -386,8 +465,8 @@
   <div class="font-headline-md text-headline-md font-bold text-primary cursor-pointer" onclick="goHome()">MockMentor</div>
   <div class="hidden md:flex gap-8 items-center">
     <a id="nav-practice" class="nav-link nav-link-active font-body-md text-body-md" href="#" onclick="goHome();return false;">Practice</a>
-    <a class="nav-link text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#" onclick="openHistory();return false;">History</a>
-    <a class="nav-link text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#" onclick="openResources();return false;">Resources</a>
+    <a id="nav-history" class="nav-link text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#" onclick="openHistory();return false;">History</a>
+    <a id="nav-resources" class="nav-link text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#" onclick="openResources();return false;">Resources</a>
   </div>
   <div class="flex gap-4">
     <button title="Settings" class="text-on-surface-variant hover:text-primary transition-colors" onclick="openSettings()"><span class="material-symbols-outlined">settings</span></button>
@@ -532,6 +611,139 @@
   </div>
 </main>
 
+<!-- ========================================================================= -->
+<!-- SCREEN 5: History (full page)                                             -->
+<!-- Static shell is editable HTML; #history-stats and #history-list are        -->
+<!-- filled by openHistory() from the in-memory session log.                    -->
+<!-- ========================================================================= -->
+<main id="screen-history" class="screen flex-grow flex-col items-center pt-28 md:pt-32 pb-24 px-container-padding-mobile md:px-container-padding-desktop relative z-10 w-full">
+  <div class="liquid-glass w-full max-w-3xl mx-auto rounded-[40px] p-8 md:p-12 flex flex-col gap-8 relative overflow-hidden">
+    <!-- Header -->
+    <div class="flex items-end justify-between gap-4 flex-wrap z-10">
+      <div>
+        <h1 class="text-display-lg-mobile md:text-display-lg text-primary page-head-title">Session History</h1>
+        <p class="text-body-lg text-on-surface-variant mt-2">Every answer you've been graded on this session, with the feedback you got.</p>
+      </div>
+      <button id="history-clear-btn" class="glass-btn-secondary px-6 py-3 rounded-full text-label-sm text-primary flex items-center gap-2" onclick="clearHistory()">
+        <span class="material-symbols-outlined text-[18px]">delete_sweep</span> Clear history
+      </button>
+    </div>
+
+    <!-- Stats (filled by JS) -->
+    <div id="history-stats" class="grid grid-cols-2 sm:grid-cols-4 gap-3 z-10"></div>
+
+    <!-- Answer log (filled by JS) -->
+    <div id="history-list" class="flex flex-col gap-4 z-10"></div>
+  </div>
+</main>
+
+<!-- ========================================================================= -->
+<!-- SCREEN 6: Resources (full page)                                           -->
+<!-- The "Course corpus" block below is plain, editable HTML - change the       -->
+<!-- chapters/links freely. #custom-resource-list is filled by openResources(). -->
+<!-- ========================================================================= -->
+<main id="screen-resources" class="screen flex-grow flex-col items-center pt-28 md:pt-32 pb-24 px-container-padding-mobile md:px-container-padding-desktop relative z-10 w-full">
+  <div class="liquid-glass w-full max-w-3xl mx-auto rounded-[40px] p-8 md:p-12 flex flex-col gap-8 relative overflow-hidden">
+    <!-- Header (inside the panel) -->
+    <div class="z-10">
+      <h1 class="text-display-lg-mobile md:text-display-lg text-primary page-head-title">Resources</h1>
+      <p class="text-body-lg text-on-surface-variant mt-2">The material MockMentor grades your answers against, plus any references you add yourself.</p>
+    </div>
+
+    <!-- Your resources FIRST (at the top): the Add control is right here so you
+         never scroll past the corpus to reach it, and the list scrolls inside a
+         capped area so a long list can't push anything off-screen. -->
+    <div class="flex flex-col gap-4 z-10">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 text-on-surface-variant">
+          <span class="material-symbols-outlined text-[18px]">bookmark</span>
+          <span class="text-label-sm uppercase tracking-wider">Your resources</span>
+        </div>
+        <button id="res-add-toggle" class="glass-btn-secondary px-4 py-2 rounded-full text-label-sm text-primary flex items-center gap-1 flex-shrink-0" onclick="openResourceModal()">
+          <span class="material-symbols-outlined text-[18px]">add</span>Add
+        </button>
+      </div>
+
+      <p class="text-label-sm text-on-surface-variant">Your own notes, PDFs, or links — stored locally on this device (not yet fed into grading).</p>
+
+      <div id="custom-resource-list" class="resource-scroll flex flex-col gap-2"></div>
+    </div>
+
+    <div class="h-px w-full bg-white/10 z-10"></div>
+
+    <!-- Course corpus BELOW: one collapsible dropdown per subject. Chapters live
+         inside, so the page stays abstracted. Add more subjects by copying an
+         .accordion block. -->
+    <div class="flex flex-col gap-4 z-10">
+      <div class="flex items-center gap-2 text-on-surface-variant">
+        <span class="material-symbols-outlined text-[18px]">menu_book</span>
+        <span class="text-label-sm uppercase tracking-wider">Course corpus</span>
+      </div>
+      <p class="text-body-md text-on-surface-variant leading-relaxed">
+        The material your answers are graded against, grouped by subject. Expand a subject to see what's indexed.
+      </p>
+
+      <div class="flex flex-col gap-3">
+        <!-- Subject: Operating Systems -->
+        <div class="accordion">
+          <button class="accordion-head" onclick="toggleAccordion(this)">
+            <span class="flex items-center gap-3 min-w-0">
+              <span class="material-symbols-outlined text-[22px] text-primary">dns</span>
+              <span class="min-w-0">
+                <span class="block text-body-lg text-primary truncate">Operating Systems</span>
+                <span class="block text-label-sm text-on-surface-variant">Three Easy Pieces · 5 chapters indexed</span>
+              </span>
+            </span>
+            <span class="material-symbols-outlined accordion-chevron">expand_more</span>
+          </button>
+          <div class="accordion-body"><div class="accordion-inner"><div class="accordion-inner-pad">
+            <div class="panel-row items-center justify-between" style="margin:0;">
+              <div class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Ch 02 · Introduction to Operating Systems</span></div>
+              <span class="text-label-sm text-on-surface-variant whitespace-nowrap">pp. 24–41</span>
+            </div>
+            <div class="panel-row items-center justify-between" style="margin:0;">
+              <div class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Ch 07 · Scheduling: Introduction</span></div>
+              <span class="text-label-sm text-on-surface-variant whitespace-nowrap">pp. 83–94</span>
+            </div>
+            <div class="panel-row items-center justify-between" style="margin:0;">
+              <div class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Ch 13 · The Abstraction: Address Spaces</span></div>
+              <span class="text-label-sm text-on-surface-variant whitespace-nowrap">pp. 132–140</span>
+            </div>
+            <div class="panel-row items-center justify-between" style="margin:0;">
+              <div class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Ch 26 · Concurrency: An Introduction</span></div>
+              <span class="text-label-sm text-on-surface-variant whitespace-nowrap">pp. 284–298</span>
+            </div>
+            <div class="panel-row items-center justify-between" style="margin:0;">
+              <div class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Ch 32 · Common Concurrency Problems (Deadlocks)</span></div>
+              <span class="text-label-sm text-on-surface-variant whitespace-nowrap">pp. 379–393</span>
+            </div>
+            <a href="https://pages.cs.wisc.edu/~remzi/OSTEP/" target="_blank" rel="noopener"
+               class="text-label-sm text-primary underline mt-1 inline-flex items-center gap-1 self-start">
+               <span class="material-symbols-outlined text-[15px]">open_in_new</span>Open OSTEP (free online)</a>
+          </div></div></div>
+        </div>
+
+        <!-- Subject: Data Structures & Algorithms (coming soon) -->
+        <div class="accordion">
+          <button class="accordion-head" onclick="toggleAccordion(this)">
+            <span class="flex items-center gap-3 min-w-0">
+              <span class="material-symbols-outlined text-[22px] text-on-surface-variant">account_tree</span>
+              <span class="min-w-0">
+                <span class="block text-body-lg text-primary truncate">Data Structures &amp; Algorithms</span>
+                <span class="block text-label-sm text-on-surface-variant">Coming soon · not yet indexed</span>
+              </span>
+            </span>
+            <span class="material-symbols-outlined accordion-chevron">expand_more</span>
+          </button>
+          <div class="accordion-body"><div class="accordion-inner"><div class="accordion-inner-pad">
+            <p class="text-body-md text-on-surface-variant">No material indexed yet. This subject will appear here once it's added to the corpus.</p>
+          </div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
 <!-- ===================== Error / notice modal ===================== -->
 <div id="error-modal" class="modal-overlay" onclick="if (event.target === this) hideError()">
   <div class="modal-card">
@@ -550,6 +762,37 @@
       <button class="nav-close" onclick="closeNav()" title="Close"><span class="material-symbols-outlined text-[20px]">close</span></button>
     </div>
     <div id="nav-body" class="nav-panel-body"></div>
+  </div>
+</div>
+
+<!-- ===================== Add-resource modal (upload / link) ===================== -->
+<div id="resource-modal" class="modal-overlay" onclick="if (event.target === this) closeResourceModal()">
+  <div class="nav-panel">
+    <div class="nav-panel-head">
+      <h3>Add a resource</h3>
+      <button class="nav-close" onclick="closeResourceModal()" title="Close"><span class="material-symbols-outlined text-[20px]">close</span></button>
+    </div>
+    <div class="nav-panel-body flex flex-col gap-3">
+      <!-- Upload from device: click to browse or drag & drop -->
+      <div id="res-dropzone" class="dropzone flex flex-col items-center gap-1.5" onclick="document.getElementById('res-file').click()">
+        <span class="material-symbols-outlined text-[28px]">upload_file</span>
+        <div class="text-body-md">Drag &amp; drop files here, or <span class="text-primary underline">browse</span></div>
+        <div class="text-label-sm text-on-surface-variant">PDF, DOCX, TXT, MD — kept on this device</div>
+        <input id="res-file" type="file" multiple accept=".pdf,.doc,.docx,.txt,.md,.rtf,.ppt,.pptx" style="display:none;" onchange="handleFilePick(this.files)">
+      </div>
+
+      <div class="flex items-center gap-3 text-label-sm text-on-surface-variant">
+        <span class="h-px flex-grow bg-white/10"></span>or add a link<span class="h-px flex-grow bg-white/10"></span>
+      </div>
+
+      <input id="res-name" class="panel-input" placeholder="Resource name (e.g. My notes)">
+      <input id="res-url" class="panel-input" placeholder="Link (https://…)">
+      <div class="flex gap-2 mt-1">
+        <button class="primary-btn text-label-sm font-semibold rounded-full px-6 py-2.5 flex items-center gap-2" onclick="addCustomResource()">
+          <span class="material-symbols-outlined text-[18px]">check</span>Save link</button>
+        <button class="glass-btn-secondary text-label-sm rounded-full px-6 py-2.5 text-primary" onclick="closeResourceModal()">Done</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -745,96 +988,220 @@ function escapeHtml(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-// ---- History ----
-function openHistory() {
-  let body;
-  if (!state.history.length) {
-    body = `<div class="panel-empty">
-      <span class="material-symbols-outlined text-[40px] opacity-60">history</span>
-      <p class="mt-2">No answers yet this session.</p>
-      <p class="text-label-sm mt-1">Grade an answer and it'll show up here.</p>
-    </div>`;
-  } else {
-    body = state.history.map((h, i) => {
-      const v = VERDICT_STYLE[h.verdict] || { cls: 'verdict-chip-red', icon: 'help' };
-      return `<div class="panel-row" style="flex-direction:column; gap:8px;">
-        <div class="flex items-center justify-between w-full gap-3">
-          <span class="text-label-sm text-on-surface-variant">Q${i + 1}${h.isFollowup ? ' · follow-up' : ''}</span>
-          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-label-sm ${v.cls}">
-            <span class="material-symbols-outlined text-[15px]" style="font-variation-settings:'FILL' 1;">${v.icon}</span>
-            ${escapeHtml(h.verdict)} · ${h.score ?? '—'}/5
-          </span>
-        </div>
-        <p class="text-body-md text-on-surface leading-snug">${escapeHtml(h.question)}</p>
-      </div>`;
-    }).join('');
-    const avg = (state.history.reduce((a, h) => a + (Number(h.score) || 0), 0) / state.history.length).toFixed(1);
-    body = `<p class="text-label-sm text-on-surface-variant mb-3">${state.history.length} answered · avg score ${avg}/5</p>` + body;
-  }
-  openNav('Session History', body);
+// ---- Nav active state (History / Resources are now full pages) ----
+function setNavActive(name) {
+  ['practice', 'history', 'resources'].forEach(n => {
+    const el = document.getElementById('nav-' + n);
+    if (el) el.classList.toggle('nav-link-active', n === name);
+  });
 }
 
-// ---- Resources ----
-function openResources() {
-  const chapters = [
-    'Introduction to OS', 'Scheduling Intro', 'Address Spaces',
-    'Concurrency Intro', 'Concurrency Problems (Deadlocks)',
-  ];
-  const chapterList = chapters.map(c =>
-    `<div class="flex items-center gap-2 text-body-md text-on-surface-variant py-1">
-       <span class="material-symbols-outlined text-[16px] opacity-70">menu_book</span>${c}</div>`).join('');
+// ---- History (full page) ----
+function statTile(label, value, icon, colorCls) {
+  return `<div class="stat-tile">
+    <span class="material-symbols-outlined text-[20px] ${colorCls}" style="font-variation-settings:'FILL' 1;">${icon}</span>
+    <span class="text-headline-md text-primary font-semibold leading-none mt-1">${value}</span>
+    <span class="text-label-sm text-on-surface-variant">${label}</span>
+  </div>`;
+}
+function renderHistory() {
+  const statsEl = document.getElementById('history-stats');
+  const listEl = document.getElementById('history-list');
+  const clearBtn = document.getElementById('history-clear-btn');
 
+  if (!state.history.length) {
+    statsEl.innerHTML = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    listEl.innerHTML = `<div class="flex flex-col items-center text-center" style="padding:32px 20px 12px;">
+      <span class="material-symbols-outlined text-[48px] text-on-surface-variant">history</span>
+      <p class="mt-3 text-body-lg text-primary">No answers yet this session.</p>
+      <p class="text-body-md text-on-surface-variant mt-1">Grade an answer and it'll show up here with its feedback.</p>
+      <button class="primary-btn text-label-sm font-semibold rounded-full px-8 py-3 mt-6 inline-flex items-center gap-2" onclick="goHome()">
+        <span class="material-symbols-outlined text-[18px]">play_arrow</span>Start practicing</button>
+    </div>`;
+    return;
+  }
+  if (clearBtn) clearBtn.style.display = '';
+
+  const total = state.history.length;
+  const avg = (state.history.reduce((a, h) => a + (Number(h.score) || 0), 0) / total).toFixed(1);
+  const counts = { 'Correct': 0, 'Partially Correct': 0, 'Incorrect': 0 };
+  state.history.forEach(h => { if (counts[h.verdict] != null) counts[h.verdict]++; });
+  statsEl.innerHTML = [
+    statTile('Answered', total, 'quiz', 'text-primary'),
+    statTile('Avg score', avg + '/5', 'grade', 'text-primary'),
+    statTile('Correct', counts['Correct'], 'check_circle', 'text-[#81c784]'),
+    statTile('Needs work', counts['Partially Correct'] + counts['Incorrect'], 'error', 'text-[#ffca28]'),
+  ].join('');
+
+  listEl.innerHTML = state.history.map((h, i) => {
+    const v = VERDICT_STYLE[h.verdict] || { cls: 'verdict-chip-red', icon: 'help' };
+    return `<div class="log-entry">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <span class="text-label-sm text-on-surface-variant uppercase tracking-wider">Q${i + 1}${h.isFollowup ? ' · follow-up' : ''}${h.subject ? ' · ' + escapeHtml(h.subject) : ''}</span>
+        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-label-sm ${v.cls}">
+          <span class="material-symbols-outlined text-[15px]" style="font-variation-settings:'FILL' 1;">${v.icon}</span>
+          ${escapeHtml(h.verdict)} · ${h.score ?? '—'}/5
+        </span>
+      </div>
+      <p class="text-body-lg text-primary leading-snug">${escapeHtml(h.question)}</p>
+      ${h.explanation ? `<p class="text-body-md text-on-surface-variant leading-relaxed border-t border-white/10 pt-3">${escapeHtml(h.explanation)}</p>` : ''}
+    </div>`;
+  }).join('');
+}
+function openHistory() {
+  renderHistory();
+  showScreen('history');
+  setNavActive('history');
+}
+
+// ---- Resources (full page) ----
+// File blobs live in IndexedDB (handles large PDFs and survives reloads);
+// localStorage only holds lightweight metadata + a reference id.
+const MM_DB = 'mm_files_db', MM_STORE = 'files';
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(MM_DB, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(MM_STORE, { keyPath: 'id' });
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+function idbPut(rec) {
+  return idbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(MM_STORE, 'readwrite');
+    tx.objectStore(MM_STORE).put(rec);
+    tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+  }));
+}
+function idbGet(id) {
+  return idbOpen().then(db => new Promise((resolve, reject) => {
+    const req = db.transaction(MM_STORE, 'readonly').objectStore(MM_STORE).get(id);
+    req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error);
+  }));
+}
+function idbDelete(id) {
+  return idbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(MM_STORE, 'readwrite');
+    tx.objectStore(MM_STORE).delete(id);
+    tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+  }));
+}
+function fmtSize(n) {
+  if (n == null) return '';
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n / 1024).toFixed(0) + ' KB';
+  return (n / 1048576).toFixed(1) + ' MB';
+}
+
+// Store the picked/dropped files on-device, then list them.
+async function handleFilePick(fileList) {
+  const files = Array.from(fileList || []);
+  if (!files.length) return;
+  const list = loadCustomResources();
+  for (const f of files) {
+    const id = 'f_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    try {
+      await idbPut({ id, name: f.name, type: f.type, blob: f });
+      list.push({ kind: 'file', name: f.name, size: f.size, ftype: f.type, fileId: id });
+    } catch (e) {
+      showError('Could not store that file on this device.', 'Upload failed', 'upload_file');
+    }
+  }
+  saveCustomResources(list);
+  const input = document.getElementById('res-file');
+  if (input) input.value = '';
+  renderResources();
+}
+
+// Open a stored file in a new tab via a temporary object URL.
+async function openResourceFile(fileId) {
+  try {
+    const rec = await idbGet(fileId);
+    if (!rec || !rec.blob) { showError('That file is no longer available on this device.', 'File missing', 'error'); return; }
+    const url = URL.createObjectURL(rec.blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) {
+    showError('Could not open that file.', 'File error', 'error');
+  }
+}
+
+function renderResources() {
+  const listEl = document.getElementById('custom-resource-list');
+  if (!listEl) return;
   const custom = loadCustomResources();
-  const customList = custom.length
-    ? custom.map((r, i) => `
-        <div class="panel-row items-center justify-between">
+  if (!custom.length) {
+    listEl.innerHTML = `<p class="text-label-sm text-on-surface-variant opacity-70">No resources yet. Upload a file from your device or add a link above.</p>`;
+    return;
+  }
+  listEl.innerHTML = custom.map((r, i) => {
+    if (r.kind === 'file') {
+      const isPdf = /pdf/i.test(r.ftype || '') || /\.pdf$/i.test(r.name || '');
+      const icon = isPdf ? 'picture_as_pdf' : 'description';
+      return `<div class="panel-row items-center justify-between">
+        <div class="min-w-0 flex items-start gap-3">
+          <span class="material-symbols-outlined text-[18px] opacity-80 mt-0.5">${icon}</span>
           <div class="min-w-0">
             <div class="text-body-md text-on-surface truncate">${escapeHtml(r.name)}</div>
-            ${r.url ? `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener" class="text-label-sm text-on-surface-variant hover:text-primary underline truncate block">${escapeHtml(r.url)}</a>` : ''}
+            <div class="text-label-sm text-on-surface-variant">${fmtSize(r.size)} · on this device</div>
           </div>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <span class="material-symbols-outlined icon-btn" title="Open" onclick="openResourceFile('${r.fileId}')">open_in_new</span>
           <span class="material-symbols-outlined icon-btn danger" title="Remove" onclick="removeCustomResource(${i})">delete</span>
-        </div>`).join('')
-    : `<p class="text-label-sm text-on-surface-variant opacity-70 mb-2">No custom resources yet.</p>`;
-
-  const body = `
-    <div class="mb-6">
-      <div class="text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Course corpus</div>
-      <div class="panel-row" style="flex-direction:column; gap:6px;">
-        <div class="text-body-md text-on-surface font-medium">Operating Systems: Three Easy Pieces (OSTEP)</div>
-        <div class="text-label-sm text-on-surface-variant">The grounding source for grading. 5 chapters indexed:</div>
-        ${chapterList}
-        <a href="https://pages.cs.wisc.edu/~remzi/OSTEP/" target="_blank" rel="noopener"
-           class="text-label-sm text-primary underline mt-1 inline-flex items-center gap-1">
-           <span class="material-symbols-outlined text-[15px]">open_in_new</span>Open OSTEP (free)</a>
+        </div>
+      </div>`;
+    }
+    // link entry (also covers legacy {name,url} records)
+    return `<div class="panel-row items-center justify-between">
+      <div class="min-w-0 flex items-start gap-3">
+        <span class="material-symbols-outlined text-[18px] opacity-70 mt-0.5">link</span>
+        <div class="min-w-0">
+          <div class="text-body-md text-on-surface truncate">${escapeHtml(r.name)}</div>
+          ${r.url
+            ? `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener" class="text-label-sm text-on-surface-variant hover:text-primary underline truncate block">${escapeHtml(r.url)}</a>`
+            : `<div class="text-label-sm text-on-surface-variant opacity-70">No link</div>`}
+        </div>
       </div>
-    </div>
-    <div>
-      <div class="text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Your resources</div>
-      <div id="custom-resource-list">${customList}</div>
-      <div class="flex flex-col gap-2 mt-3">
-        <input id="res-name" class="panel-input" placeholder="Resource name (e.g. My notes)">
-        <input id="res-url" class="panel-input" placeholder="Link (optional, https://…)">
-        <button class="primary-btn text-label-sm font-semibold rounded-full px-6 py-2.5 mt-1 self-start flex items-center gap-2"
-                onclick="addCustomResource()">
-          <span class="material-symbols-outlined text-[18px]">add</span>Add resource</button>
-      </div>
+      <span class="material-symbols-outlined icon-btn danger flex-shrink-0" title="Remove" onclick="removeCustomResource(${i})">delete</span>
     </div>`;
-  openNav('Resources', body);
+  }).join('');
+}
+function openResources() {
+  renderResources();
+  showScreen('resources');
+  setNavActive('resources');
+}
+// Expand/collapse a subject dropdown in the corpus section.
+function toggleAccordion(btn) {
+  btn.closest('.accordion').classList.toggle('open');
+}
+// Open/close the add-resource popup.
+function openResourceModal() {
+  document.getElementById('resource-modal').classList.add('show');
+}
+function closeResourceModal() {
+  document.getElementById('resource-modal').classList.remove('show');
 }
 function addCustomResource() {
   const name = document.getElementById('res-name').value.trim();
   const url = document.getElementById('res-url').value.trim();
   if (!name) { document.getElementById('res-name').focus(); return; }
   const list = loadCustomResources();
-  list.push({ name, url });
+  list.push({ kind: 'link', name, url });
   saveCustomResources(list);
-  openResources();   // re-render
+  document.getElementById('res-name').value = '';
+  document.getElementById('res-url').value = '';
+  renderResources();          // re-render the list; keep the form open for more
 }
-function removeCustomResource(i) {
+async function removeCustomResource(i) {
   const list = loadCustomResources();
+  const r = list[i];
+  if (r && r.kind === 'file' && r.fileId) { try { await idbDelete(r.fileId); } catch (e) {} }
   list.splice(i, 1);
   saveCustomResources(list);
-  openResources();
+  renderResources();
 }
 
 // ---- Settings ----
@@ -889,10 +1256,15 @@ function openAccount() {
       <span class="material-symbols-outlined text-[18px]">delete_sweep</span>Clear session history</button>`;
   openNav('Account', body);
 }
-function clearHistory() { state.history = []; openAccount(); }
+function clearHistory() {
+  state.history = [];
+  // Re-render whichever view is showing it.
+  if (document.getElementById('screen-history').classList.contains('active')) renderHistory();
+  if (document.getElementById('nav-modal').classList.contains('show')) openAccount();
+}
 
 // Dismiss modals on Escape.
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { hideError(); closeNav(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { hideError(); closeNav(); closeResourceModal(); } });
 
 // ---- Grading status rotation (only runs while grading screen is up) ----
 const GRADING_MESSAGES = [
@@ -939,7 +1311,7 @@ async function loadSubjects() {
       <div class="flex items-center justify-between w-full">
         <span class="material-symbols-outlined ${active ? 'text-primary' : 'text-on-surface-variant'} text-3xl">${s.icon}</span>
         ${s.available
-          ? `<div class="w-3 h-3 rounded-full ${active ? 'bg-white/20 shadow-[0_0_8px_rgba(255,255,255,0.4)]' : 'border border-white/20'}"></div>`
+          ? `<div class="subject-dot w-2.5 h-2.5 rounded-full ${active ? 'on' : 'border border-white/25'}"></div>`
           : `<span class="text-label-sm text-on-surface-variant opacity-70">Coming soon</span>`}
       </div>
       <div>
@@ -1025,11 +1397,13 @@ async function submitAnswer() {
       showScreen('question');
       return;
     }
-    // Record this answer for the History panel.
+    // Record this answer for the History page (detailed: subject + feedback).
     state.history.push({
       question: state.question,
       verdict: result.verdict,
       score: result.score,
+      explanation: result.explanation,
+      subject: state.subjects[state.selectedSubject]?.name || '',
       isFollowup: state.isFollowup,
     });
     renderVerdict(result);
@@ -1098,11 +1472,29 @@ function answerFollowup() {
 function goHome() {
   stopGradingAnimation();
   closeNav();
+  setNavActive('practice');
   state.isFollowup = false;
   state.index = 0;
   showScreen('selector');
   loadSubjects();
 }
+
+// ---- Drag & drop wiring for the upload dropzone ----
+(function wireDropzone() {
+  const dz = document.getElementById('res-dropzone');
+  if (!dz) return;
+  ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover');
+  }));
+  ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => {
+    e.preventDefault(); e.stopPropagation(); dz.classList.remove('dragover');
+  }));
+  dz.addEventListener('drop', e => {
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      handleFilePick(e.dataTransfer.files);
+    }
+  });
+})();
 
 // ---- Boot ----
 loadSubjects();

@@ -501,13 +501,16 @@ The feedback cites the actual OSTEP page — the core payoff of grounding gradin
 - [x] Data ingestion pipeline (`src/ingest.py`) — 79 chunks, verified
 - [x] Embedding & storage pipeline (`src/embed_store.py`) — 79 chunks in ChromaDB, verified
 - [x] Retrieval logic (`src/retrieve.py`) — top-k=3 semantic retrieval, verified
-- [x] Grading logic (`src/evaluate.py`) — RAG-grounded grading + follow-up, verified
+- [x] Grading logic (`src/evaluate.py`) — RAG-grounded grading + `model_answer` + follow-up, verified
 - [x] Streamlit UI (`src/app.py`) — full loop wired, boots clean, verified
+- [x] Flask backend (`src/server.py`) + shared `src/questions.py` — JSON API, verified round-trip
+- [x] Liquid-glass web app (`UI/index.html`) — merged SPA, adaptive lighting, functional navbar, verified
 
 **Phase 1 completion:** 14/14 items (100%) ✅  
 **Data layer (ingest → embed → retrieve):** ✅ Complete  
 **RAG loop (retrieve → grade → follow-up → UI):** ✅ Complete — demoable end-to-end  
-**Next phase (Week 3):** tests + manual QA hardening
+**Web app (Flask + liquid-glass SPA):** ✅ Complete — primary front end shipped  
+**Next phase (Week 3):** tests, wire custom resources into RAG, optional difficulty selector
 
 ---
 
@@ -536,4 +539,4 @@ The feedback cites the actual OSTEP page — the core payoff of grounding gradin
 ---
 
 **End of Progress Summary**  
-*Steps 2.4 (Evaluate) + 2.5 (Streamlit app) complete — the full RAG loop (ingest → embed → retrieve → grade → follow-up → UI) runs end-to-end and is demoable. Next up: Week 3 hardening (tests + manual QA).*
+*Steps 2.6 (Flask backend) + 2.7 (liquid-glass web app) complete — MockMentor now ships a polished single-page web front end backed by the local RAG pipeline, with a functional navbar, adaptive glass UI, and styled error handling. Next up: Week 3 hardening (tests, wire custom resources into the corpus, optional difficulty selector).*
