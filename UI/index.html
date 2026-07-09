@@ -55,6 +55,19 @@
     html { zoom: 90%; }
     body { background-color: #000; min-height: 100vh; color: #e5e2e1; overflow-x: hidden; font-family: 'Inter', sans-serif; }
 
+    /* --- Global slim custom scrollbar (replaces the chunky default) --- */
+    * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.20) transparent; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.16);
+        border-radius: 9999px;
+        border: 2px solid transparent;          /* inset padding -> thin floating thumb */
+        background-clip: padding-box;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.32); background-clip: padding-box; }
+    ::-webkit-scrollbar-corner { background: transparent; }
+
     /* Text-shadow safety net: the background is a video that ranges black->white,
        so light text needs a dark halo to stay legible on bright frames. Applied
        to all headings and paragraph text. */
@@ -546,7 +559,7 @@
 <!-- ========================================================================= -->
 <main id="screen-verdict" class="screen flex-grow flex-col items-center justify-center pt-32 pb-24 px-container-padding-mobile md:px-container-padding-desktop relative z-10 w-full max-w-5xl mx-auto">
   <!-- Progress -->
-  <div class="w-full max-w-3xl mb-12 flex flex-col gap-2">
+  <div class="w-full max-w-[880px] mb-12 flex flex-col gap-2">
     <div class="flex justify-between items-center px-1">
       <span id="v-progress-label" class="text-label-sm text-on-surface-variant">Question 1 of 10</span>
       <span class="text-label-sm text-on-surface-variant">Operating Systems</span>
@@ -557,7 +570,7 @@
   </div>
 
   <!-- Verdict card -->
-  <div class="liquid-glass w-full max-w-3xl md:p-12 flex flex-col gap-8 relative overflow-hidden rounded-[48px] p-6">
+  <div class="liquid-glass w-full max-w-[880px] md:p-12 flex flex-col gap-8 relative overflow-hidden rounded-[48px] p-6">
     <div class="flex flex-col gap-4 items-center text-center">
       <div id="v-chip" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full verdict-chip-amber">
         <span id="v-chip-icon" class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1;">warning</span>
@@ -594,7 +607,7 @@
   </div>
 
   <!-- Follow-up -->
-  <div class="mt-12 w-full max-w-3xl flex flex-col items-center gap-8 animate-fadeInUp">
+  <div class="mt-12 w-full max-w-[880px] flex flex-col items-center gap-8 animate-fadeInUp">
     <div class="text-center flex flex-col gap-3">
       <span class="text-label-sm text-on-surface-variant uppercase tracking-widest">Follow-up</span>
       <p id="v-followup" class="text-body-lg text-primary max-w-lg mx-auto">—</p>
@@ -616,8 +629,8 @@
 <!-- Static shell is editable HTML; #history-stats and #history-list are        -->
 <!-- filled by openHistory() from the in-memory session log.                    -->
 <!-- ========================================================================= -->
-<main id="screen-history" class="screen flex-grow flex-col items-center pt-28 md:pt-32 pb-24 px-container-padding-mobile md:px-container-padding-desktop relative z-10 w-full">
-  <div class="liquid-glass w-full max-w-3xl mx-auto rounded-[40px] p-8 md:p-12 flex flex-col gap-8 relative overflow-hidden">
+<main id="screen-history" class="screen flex-grow flex-col items-center pt-24 pb-24 px-container-padding-mobile md:px-container-padding-desktop relative z-10 w-full">
+  <div class="liquid-glass w-full max-w-[880px] mx-auto rounded-[40px] p-8 md:p-12 flex flex-col gap-8 relative overflow-hidden">
     <!-- Header -->
     <div class="flex items-end justify-between gap-4 flex-wrap z-10">
       <div>
@@ -642,8 +655,8 @@
 <!-- The "Course corpus" block below is plain, editable HTML - change the       -->
 <!-- chapters/links freely. #custom-resource-list is filled by openResources(). -->
 <!-- ========================================================================= -->
-<main id="screen-resources" class="screen flex-grow flex-col items-center pt-28 md:pt-32 pb-24 px-container-padding-mobile md:px-container-padding-desktop relative z-10 w-full">
-  <div class="liquid-glass w-full max-w-3xl mx-auto rounded-[40px] p-8 md:p-12 flex flex-col gap-8 relative overflow-hidden">
+<main id="screen-resources" class="screen flex-grow flex-col items-center pt-24 pb-24 px-container-padding-mobile md:px-container-padding-desktop relative z-10 w-full">
+  <div class="liquid-glass w-full max-w-[880px] mx-auto rounded-[40px] p-8 md:p-12 flex flex-col gap-8 relative overflow-hidden">
     <!-- Header (inside the panel) -->
     <div class="z-10">
       <h1 class="text-display-lg-mobile md:text-display-lg text-primary page-head-title">Resources</h1>
