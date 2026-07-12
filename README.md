@@ -109,6 +109,14 @@ See `data/raw/README.md` for exact instructions.
 
 > **Both UIs require Ollama running with `qwen3:8b` and a built `chroma_db/`.** If you haven't embedded the corpus yet, run `python src/embed_store.py` once first (see the data-layer scripts below).
 
+**Launcher — switch between the two UIs from one entry point:**
+```bash
+python run.py            # interactive menu: 1) Streamlit  2) Web (liquid-glass)
+python run.py web        # go straight to the web app
+python run.py streamlit  # go straight to the Streamlit app
+```
+On Windows, double-click **`start.bat`** (or run it from `cmd`) to activate the venv and launch the same menu without typing the `venv\Scripts\python.exe` path yourself. Only one UI runs at a time — stop it (Ctrl+C) and re-run the launcher to switch.
+
 **Web app — the main interface (Flask + liquid-glass UI):**
 ```bash
 python src/server.py
@@ -119,14 +127,15 @@ Then open **http://localhost:5000**. This is the primary front end: a single-pag
 2. **Question** — a question from the OSTEP-backed bank (10 per session); type your answer.
 3. **Grading** — an animated state while `qwen3:8b` evaluates your response.
 4. **Verdict** — colour-coded verdict + score, feedback, a **model answer**, the OSTEP **sources** the grade was based on, and an adaptive **follow-up** you can answer to continue the session.
+5. **History / Resources** — full pages (not popups) showing this session's graded answers with stats, and the course corpus (grouped by subject in collapsible dropdowns) plus your own uploaded/linked study resources.
 
 Under the hood the server reuses the same pipeline as everything else: `GET /api/question` serves questions from `src/questions.py`, and `POST /api/grade` runs `retrieve.py` → `evaluate.py`. The ChromaDB collection is opened once at startup and shared across requests. If Ollama isn't running, the UI shows a clear message instead of failing silently.
 
-**Streamlit app — lightweight testing UI:**
+**Streamlit app — lightweight/alternate UI:**
 ```bash
 streamlit run src/app.py
 ```
-A simpler interface for quick iteration on the pipeline: pick a chapter + question, submit an answer, and see the same RAG-grounded grade (verdict, score, feedback, model answer, follow-up, sources). Handy when you want to test grading changes without the full web front end.
+A simpler dashboard-style interface for quick iteration on the pipeline, or to demo without the full custom web UI: pick a chapter + question in the sidebar, submit an answer, and see the same RAG-grounded grade (verdict, score, feedback, model answer, follow-up, sources), plus live session stats and history. Same pipeline as the web app underneath — only the presentation differs.
 
 **Data-layer scripts (run individually to verify each stage):**
 ```bash
