@@ -35,11 +35,10 @@ from retrieve import retrieve
 
 # --- Seed question bank -------------------------------------------------------
 
-# Nested by subject -> chapter -> starter questions. Only "Operating Systems"
-# has a built corpus right now (the OSTEP chapters in ChromaDB), so it's the
-# only subject offered in the dropdown below. Add a new top-level key here
-# once another subject's corpus exists, and the Chapter/Question dropdowns
-# will pick it up automatically.
+# Nested by subject -> section -> starter questions. Both subjects have a built
+# corpus in ChromaDB (OSTEP chapters, DSA topics). Add a new top-level key + w
+# an entry in SUBJECT_NAME_TO_ID once another subject's corpus exists, and the
+# dropdowns pick it up automatically.
 SUBJECT_QUESTION_BANKS = {
     "Operating Systems": {
         "Introduction to OS": [
@@ -63,6 +62,43 @@ SUBJECT_QUESTION_BANKS = {
             "How can circular wait be prevented?",
         ],
     },
+    "Data Structures & Algorithms": {
+        "Arrays & Two Pointers": [
+            "When would you use the two-pointer technique instead of a nested loop?",
+        ],
+        "Sliding Window": [
+            "When would you use a sliding window instead of a nested loop?",
+        ],
+        "Binary Search": [
+            "What kind of problems can binary search solve beyond a literal lookup?",
+            "Why does binary search require the data to be sorted?",
+        ],
+        "Linked Lists": [
+            "How can you detect a cycle in a linked list, and why does it work?",
+            "When is a linked list a better choice than an array?",
+        ],
+        "Stacks & Queues": [
+            "When would you use a stack versus a queue?",
+        ],
+        "Recursion & Backtracking": [
+            "Why does recursion need a base case, and what happens if you omit one?",
+            "What is backtracking, and when is it the right approach?",
+        ],
+        "Trees & Graphs (BFS/DFS)": [
+            "What's the difference between BFS and DFS, and when would you pick one over the other?",
+            "When would you model a problem as a graph rather than a tree?",
+        ],
+        "Dynamic Programming": [
+            "What makes dynamic programming efficient compared to plain recursion?",
+        ],
+    },
+}
+
+# Map the human-readable subject label to the backend subject id (used to pick
+# the right ChromaDB collection and to tell the grader which domain it's in).
+SUBJECT_NAME_TO_ID = {
+    "Operating Systems": "os",
+    "Data Structures & Algorithms": "dsa",
 }
 
 
@@ -132,14 +168,14 @@ st.markdown(
 # --- Cached resources ------------------------------------------------------------
 
 @st.cache_resource
-def load_collection():
-    """Open the ChromaDB collection once and reuse it across reruns.
+def load_collection(subject_id):
+    """Open a subject's ChromaDB collection once and reuse it across reruns.
 
     Streamlit re-executes this whole script on every interaction, so without
     caching we'd reopen the store (and reload the embedding model) every click.
-    @st.cache_resource keeps one shared instance alive for the session.
+    @st.cache_resource keeps one shared instance alive per subject.
     """
-    return get_collection()
+    return get_collection(subject_id)
 
 
 VERDICT_META = {
@@ -174,7 +210,6 @@ def set_question(question, is_followup=False):
 
 
 init_state()
-collection = load_collection()
 
 
 # --- Sidebar: session control -----------------------------------------------------
@@ -186,8 +221,10 @@ with st.sidebar:
 
     st.markdown("**Start a question**")
     subject = st.selectbox("Subject", list(SUBJECT_QUESTION_BANKS.keys()))
+    subject_id = SUBJECT_NAME_TO_ID[subject]
+    collection = load_collection(subject_id)   # cached per subject
     chapter_bank = SUBJECT_QUESTION_BANKS[subject]
-    chapter = st.selectbox("Chapter", list(chapter_bank.keys()))
+    chapter = st.selectbox("Section", list(chapter_bank.keys()))
     starter = st.selectbox("Question", chapter_bank[chapter])
     if st.button("Answer this question", use_container_width=True, type="primary"):
         set_question(starter, is_followup=False)
@@ -208,7 +245,7 @@ with st.sidebar:
 
     st.divider()
     st.caption(f"Model: qwen3:8b (local, via Ollama)")
-    st.caption(f"Corpus: {collection.count()} chunks · Operating Systems (OSTEP)")
+    st.caption(f"Corpus: {collection.count()} chunks · {subject}")
 
 
 # --- Header -----------------------------------------------------------------------
@@ -259,8 +296,8 @@ else:
             with st.spinner("Retrieving context and grading (first call loads the model)..."):
                 # One retrieval, reused for grading, so the UI can also show
                 # the exact chunks the grade was based on.
-                chunks = retrieve(st.session_state.question, collection=collection)
-                result = grade_answer(st.session_state.question, answer, chunks=chunks)
+                chunks = retrieve(st.session_state.question, collection=collection, subject=subject_id)
+                result = grade_answer(st.session_state.question, answer, chunks=chunks, subject=subject_id)
             st.session_state.result = result
             st.session_state.history.append({
                 "question": st.session_state.question,
@@ -323,7 +360,8 @@ if result is not None:
     if sources:
         with st.expander(f"📚 Sources used for grading ({len(sources)})"):
             for s in sources:
-                st.write(f"- {s['chapter_name']} (page {s['page_number']})")
+                page = f" (page {s['page_number']})" if s.get("page_number") is not None else ""
+                st.write(f"- {s['chapter_name']}{page}")
 
 
 # --- Session history --------------------------------------------------------------

@@ -11,6 +11,8 @@ ChromaDB). The other subjects are declared so the UI can show them as
 """
 
 # Subjects the UI can offer. `available` gates whether a session can start.
+# OS (OSTEP) and DSA (self-authored notes) both have a built corpus in ChromaDB;
+# System Design is declared but not yet indexed.
 SUBJECTS = {
     "os": {
         "name": "Operating Systems",
@@ -18,11 +20,11 @@ SUBJECTS = {
         "icon": "terminal",
         "available": True,
     },
-    "ds": {
-        "name": "Data Structures",
-        "blurb": "Trees, Graphs, Hash Maps",
+    "dsa": {
+        "name": "Data Structures & Algorithms",
+        "blurb": "Arrays, Trees, Graphs, DP",
         "icon": "account_tree",
-        "available": False,
+        "available": True,
     },
     "sd": {
         "name": "System Design",
@@ -30,16 +32,11 @@ SUBJECTS = {
         "icon": "dns",
         "available": False,
     },
-    "algo": {
-        "name": "Algorithms",
-        "blurb": "DP, Sorting, Search",
-        "icon": "code",
-        "available": False,
-    },
 }
 
-# Seed questions per subject. 10 OS questions (2 per OSTEP chapter) line up with
-# the "Question N of 10" progress indicator in the UI.
+# Seed questions per subject. Conceptual (not code-writing) so the local model
+# can grade them reliably. OS: 10 (2 per OSTEP chapter). DSA: ~2 per topic
+# across the 9 patterns in dsa_notes.md.
 QUESTION_BANK = {
     "os": [
         "What is an operating system and what problem does virtualization solve?",
@@ -52,6 +49,20 @@ QUESTION_BANK = {
         "What is a critical section and how do we protect it?",
         "What is a deadlock, and what conditions cause it?",
         "How can circular wait be prevented?",
+    ],
+    "dsa": [
+        "When would you use the two-pointer technique instead of a nested loop?",
+        "When would you use a sliding window instead of a nested loop?",
+        "What kind of problems can binary search solve beyond a literal lookup?",
+        "Why does binary search require the data to be sorted?",
+        "How can you detect a cycle in a linked list, and why does it work?",
+        "When is a linked list a better choice than an array?",
+        "When would you use a stack versus a queue?",
+        "Why does recursion need a base case, and what happens if you omit one?",
+        "What is backtracking, and when is it the right approach?",
+        "What's the difference between BFS and DFS, and when would you pick one over the other?",
+        "When would you model a problem as a graph rather than a tree?",
+        "What makes dynamic programming efficient compared to plain recursion?",
     ],
 }
 

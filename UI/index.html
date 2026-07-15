@@ -736,20 +736,28 @@
           </div></div></div>
         </div>
 
-        <!-- Subject: Data Structures & Algorithms (coming soon) -->
+        <!-- Subject: Data Structures & Algorithms -->
         <div class="accordion">
           <button class="accordion-head" onclick="toggleAccordion(this)">
             <span class="flex items-center gap-3 min-w-0">
-              <span class="material-symbols-outlined text-[22px] text-on-surface-variant">account_tree</span>
+              <span class="material-symbols-outlined text-[22px] text-primary">account_tree</span>
               <span class="min-w-0">
                 <span class="block text-body-lg text-primary truncate">Data Structures &amp; Algorithms</span>
-                <span class="block text-label-sm text-on-surface-variant">Coming soon · not yet indexed</span>
+                <span class="block text-label-sm text-on-surface-variant">Interview pattern notes · 9 topics indexed</span>
               </span>
             </span>
             <span class="material-symbols-outlined accordion-chevron">expand_more</span>
           </button>
           <div class="accordion-body"><div class="accordion-inner"><div class="accordion-inner-pad">
-            <p class="text-body-md text-on-surface-variant">No material indexed yet. This subject will appear here once it's added to the corpus.</p>
+            <div class="panel-row items-center" style="margin:0;"><span class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Arrays &amp; Two Pointers</span></span></div>
+            <div class="panel-row items-center" style="margin:0;"><span class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Sliding Window</span></span></div>
+            <div class="panel-row items-center" style="margin:0;"><span class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Binary Search</span></span></div>
+            <div class="panel-row items-center" style="margin:0;"><span class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Linked Lists</span></span></div>
+            <div class="panel-row items-center" style="margin:0;"><span class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Stacks &amp; Queues</span></span></div>
+            <div class="panel-row items-center" style="margin:0;"><span class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Recursion &amp; Backtracking</span></span></div>
+            <div class="panel-row items-center" style="margin:0;"><span class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Trees (BFS/DFS)</span></span></div>
+            <div class="panel-row items-center" style="margin:0;"><span class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Graphs (BFS/DFS + basics)</span></span></div>
+            <div class="panel-row items-center" style="margin:0;"><span class="flex items-center gap-3 min-w-0"><span class="material-symbols-outlined text-[16px] opacity-70">description</span><span class="text-body-md text-on-surface truncate">Dynamic Programming (intro-level)</span></span></div>
           </div></div></div>
         </div>
       </div>
@@ -1397,7 +1405,7 @@ async function submitAnswer() {
     const res = await fetch('/api/grade', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: state.question, answer }),
+      body: JSON.stringify({ question: state.question, answer, subject: state.selectedSubject }),
     });
     const result = await res.json();
     stopGradingAnimation();
@@ -1452,7 +1460,9 @@ function renderVerdict(r) {
   ul.innerHTML = '';
   (r.sources || []).forEach(s => {
     const li = document.createElement('li');
-    li.textContent = `• ${s.chapter_name} (page ${s.page_number})`;
+    li.textContent = (s.page_number != null)
+      ? `• ${s.chapter_name} (page ${s.page_number})`
+      : `• ${s.chapter_name}`;
     ul.appendChild(li);
   });
 

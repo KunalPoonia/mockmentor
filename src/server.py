@@ -55,10 +55,15 @@ def add_no_cache_headers(response):
     response.headers["Expires"] = "0"
     return response
 
-# Open the vector store once at import time and hand the same handle to every
-# request. get_collection() also loads the embedding model, so we very much
-# want this to happen a single time, not per request.
-collection = get_collection()
+# Open the vector store once at import time and reuse across requests
+# (get_collection() also loads the embedding model, so we do this a single
+# time, not per request). One collection per AVAILABLE subject, so each
+# subject queries its own corpus.
+COLLECTIONS = {
+    subject_id: get_collection(subject_id)
+    for subject_id, meta in get_subjects().items()
+    if meta.get("available")
+}
 
 
 # --- Page --------------------------------------------------------------------
@@ -116,26 +121,31 @@ def api_question():
 
 @app.route("/api/grade", methods=["POST"])
 def api_grade():
-    """Grade a student's answer against the retrieved OSTEP context.
+    """Grade a student's answer against the retrieved context for its subject.
 
-    Expects JSON: {"question": "...", "answer": "..."}
+    Expects JSON: {"question": "...", "answer": "...", "subject": "os"|"dsa"}
     Returns the grade_answer() result (verdict, score, explanation,
     model_answer, follow_up_question, sources).
     """
     data = request.get_json(silent=True) or {}
     question = (data.get("question") or "").strip()
     answer = (data.get("answer") or "").strip()
+    subject = (data.get("subject") or "os").strip()
 
     if not question:
         return jsonify({"error": "Missing question."}), 400
     if not answer:
         return jsonify({"error": "Please enter an answer before submitting."}), 400
 
-    # Retrieve once, reuse for grading - and hand the chunks to grade_answer so
-    # the returned "sources" match exactly what was used.
+    collection = COLLECTIONS.get(subject)
+    if collection is None:
+        return jsonify({"error": f"Subject '{subject}' isn't available."}), 404
+
+    # Retrieve once from the subject's collection, reuse for grading - and hand
+    # the chunks to grade_answer so the returned "sources" match what was used.
     try:
-        chunks = retrieve(question, collection=collection)
-        result = grade_answer(question, answer, chunks=chunks)
+        chunks = retrieve(question, collection=collection, subject=subject)
+        result = grade_answer(question, answer, chunks=chunks, subject=subject)
     except ConnectionError:
         # Most common failure: Ollama isn't running. Return a clean JSON message
         # the frontend can display instead of a raw 500 HTML page.
