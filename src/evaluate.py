@@ -34,6 +34,7 @@ import ollama
 # embed_store import ...`). Resolves under `python src/evaluate.py` and
 # `streamlit run src/app.py`.
 from retrieve import retrieve
+from questions import get_subjects
 
 
 # --- Configuration -----------------------------------------------------------
@@ -66,31 +67,37 @@ def format_context(chunks):
     """
     blocks = []
     for i, chunk in enumerate(chunks, start=1):
-        source = f"{chunk['chapter_name']}, page {chunk['page_number']}"
+        # Page number only exists for paginated corpora (OSTEP); DSA topics are
+        # cited by section name alone.
+        if "page_number" in chunk:
+            source = f"{chunk['chapter_name']}, page {chunk['page_number']}"
+        else:
+            source = chunk["chapter_name"]
         blocks.append(f"[Source {i} - {source}]\n{chunk['text']}")
     return "\n\n".join(blocks)
 
 
-def build_messages(question, student_answer, chunks):
+def build_messages(question, student_answer, chunks, subject_name="Operating Systems"):
     """Build the chat messages for the grading call.
 
     We split responsibilities: a system message fixes the role + output
     contract, and the user message carries the actual question, context, and
-    answer. "/no_think" (system) disables qwen3's thinking mode.
+    answer. "/no_think" (system) disables qwen3's thinking mode. `subject_name`
+    sets the interviewer's domain so the same grader works for any subject.
     """
     context = format_context(chunks)
 
     system = (
         "/no_think\n"
-        "You are a strict but fair Operating Systems interviewer grading a "
-        "student's spoken answer. Grade ONLY against the provided textbook "
+        f"You are a strict but fair {subject_name} interviewer grading a "
+        "student's spoken answer. Grade ONLY against the provided reference "
         "context, not your own outside knowledge. If the context does not "
         "support a claim, do not credit it.\n\n"
         "Return ONLY a single JSON object, no prose, with exactly these keys:\n"
         '  "verdict": one of "Correct", "Partially Correct", "Incorrect"\n'
         '  "score": integer 0-5 (0 = no relevant content, 5 = complete & accurate)\n'
         '  "explanation": 1-3 sentences on what was right/wrong, citing the '
-        "context (e.g. mention the chapter/page).\n"
+        "context (e.g. mention the relevant section/source).\n"
         '  "model_answer": a concise, correct answer to the question (2-4 '
         "sentences), drawn ONLY from the context, showing the student what a "
         "strong answer looks like.\n"
@@ -148,8 +155,8 @@ def parse_response(raw):
 
 # --- Public API ---------------------------------------------------------------
 
-def grade_answer(question, student_answer, chunks=None, k=3, model=MODEL):
-    """Grade a student's answer against retrieved OSTEP context.
+def grade_answer(question, student_answer, chunks=None, k=3, model=MODEL, subject="os"):
+    """Grade a student's answer against retrieved context for a subject.
 
     Args:
         question:       The interview question that was asked.
@@ -159,15 +166,21 @@ def grade_answer(question, student_answer, chunks=None, k=3, model=MODEL):
                         so retrieval and grading share one lookup.
         k:              How many chunks to retrieve when chunks is None.
         model:          Ollama model name (default qwen3:8b).
+        subject:        Subject id (e.g. "os", "dsa"). Sets the interviewer's
+                        domain and, when chunks aren't passed, which collection
+                        to retrieve from.
 
     Returns:
-        dict with keys: verdict, score, explanation, follow_up_question,
-        plus "sources" (the chunks used) so the UI can show what grounded it.
+        dict with keys: verdict, score, explanation, model_answer,
+        follow_up_question, plus "sources" (the chunks used) so the UI can show
+        what grounded it.
     """
     if chunks is None:
-        chunks = retrieve(question, k=k)
+        chunks = retrieve(question, k=k, subject=subject)
 
-    messages = build_messages(question, student_answer, chunks)
+    # Human-readable subject name for the interviewer role (falls back to the id).
+    subject_name = get_subjects().get(subject, {}).get("name", "Operating Systems")
+    messages = build_messages(question, student_answer, chunks, subject_name=subject_name)
 
     response = ollama.chat(
         model=model,
@@ -178,11 +191,15 @@ def grade_answer(question, student_answer, chunks=None, k=3, model=MODEL):
     raw = response["message"]["content"]
 
     result = parse_response(raw)
-    # Attach the sources we graded against so the UI can cite them.
-    result["sources"] = [
-        {"chapter_name": c["chapter_name"], "page_number": c["page_number"]}
-        for c in chunks
-    ]
+    # Attach the sources we graded against so the UI can cite them. Page number
+    # is included only for paginated corpora (OSTEP); DSA topics cite by name.
+    sources = []
+    for c in chunks:
+        src = {"chapter_name": c["chapter_name"]}
+        if "page_number" in c:
+            src["page_number"] = c["page_number"]
+        sources.append(src)
+    result["sources"] = sources
     return result
 
 
@@ -209,4 +226,5 @@ if __name__ == "__main__":
     print(f"Follow-up:    {result['follow_up_question']}")
     print("Graded against:")
     for s in result["sources"]:
-        print(f"  - {s['chapter_name']} (page {s['page_number']})")
+        page = f" (page {s['page_number']})" if "page_number" in s else ""
+        print(f"  - {s['chapter_name']}{page}")

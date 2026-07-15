@@ -1,114 +1,118 @@
 """
 Retrieval module - the "R" in RAG.
 
-Given a question, find the most relevant OSTEP chunks we stored back in
-Step 2.2. This is the bridge between the raw question and the LLM: instead of
-asking the model to grade from memory, we first pull the actual textbook
-passages the answer should be based on, then hand those to evaluate.py later.
+Given a question and a subject, find the most relevant chunks from that
+subject's ChromaDB collection. This is the bridge between the raw question and
+the LLM: instead of grading from memory, we pull the actual source passages the
+answer should be based on, then hand those to evaluate.py.
 
 Pipeline:
     question (str)  ->  embed with the SAME model used in embed_store.py
-                    ->  ChromaDB finds the k nearest chunk vectors
-                    ->  return those chunks (text + chapter + page + score)
+                    ->  ChromaDB (subject's collection) finds the k nearest
+                    ->  return those chunks (text + section + [page] + distance)
 
-We deliberately reuse embed_store.get_collection() rather than opening ChromaDB
-ourselves. That guarantees we query the exact same collection with the exact
-same embedding function - if the query model and the storage model ever drift
-apart, the vectors stop being comparable and retrieval silently goes junk.
+We reuse embed_store.get_collection(subject) rather than opening ChromaDB
+ourselves, so the query model matches the storage model exactly (otherwise the
+vectors stop being comparable and retrieval silently goes junk).
 
-Run this file directly to sanity-check retrieval against a few known questions:
+Run this file directly to sanity-check retrieval per subject:
 
-    python src/retrieve.py
+    python src/retrieve.py            # OSTEP
+    python src/retrieve.py dsa        # DSA
 """
 
-# embed_store lives alongside this file in src/, so running from src/ (or
-# importing src.retrieve) both resolve. We mirror ingest's flat-import style.
+import sys
+
 from embed_store import get_collection
 
 
 # --- Configuration -----------------------------------------------------------
 
-# How many chunks to pull back per question. k=3 is a good default for grading:
-# enough context to cover an answer without drowning the LLM in text.
+# How many chunks to pull per question. k=3 gives enough grading context
+# without drowning the LLM in text.
 DEFAULT_K = 3
 
 
 # --- Core retrieval -----------------------------------------------------------
 
-def retrieve(question, k=DEFAULT_K, collection=None):
-    """Return the k chunks most relevant to `question`.
+def retrieve(question, k=DEFAULT_K, collection=None, subject="os"):
+    """Return the k chunks most relevant to `question` for a subject.
 
     Args:
-        question:   The query text (e.g. a student's interview question).
+        question:   The query text.
         k:          How many chunks to return (default 3).
-        collection: Optional pre-opened ChromaDB collection. Pass this in a
-                    long-running app (like Streamlit) so we don't reopen the
-                    store on every call; leave it None for one-off scripts.
+        collection: Optional pre-opened ChromaDB collection (a long-running app
+                    opens each subject's store once and passes it in). If None,
+                    we open the collection for `subject`.
+        subject:    Subject id, used to pick the collection when one isn't
+                    passed in. Defaults to "os".
 
     Returns:
         A list of dicts, best match first:
-            {
-                "text":         the chunk's text,
-                "chapter_name": which OSTEP chapter it came from,
-                "page_number":  the page it was on,
-                "distance":     ChromaDB distance (lower = more similar),
-            }
+            {"text", "chapter_name", "distance"[, "page_number"]}
+        `page_number` is only present for paginated corpora (OSTEP), not for
+        section-based ones (DSA topics).
     """
     if collection is None:
-        collection = get_collection()
+        collection = get_collection(subject)
 
     results = collection.query(query_texts=[question], n_results=k)
 
-    # ChromaDB returns each field as a list-of-lists (one inner list per query).
-    # We only ever send one query, so we index [0] to get that query's results.
     documents = results["documents"][0]
     metadatas = results["metadatas"][0]
     distances = results["distances"][0]
 
     chunks = []
     for text, metadata, distance in zip(documents, metadatas, distances):
-        chunks.append(
-            {
-                "text": text,
-                "chapter_name": metadata["chapter_name"],
-                "page_number": metadata["page_number"],
-                "distance": distance,
-            }
-        )
+        chunk = {
+            "text": text,
+            "chapter_name": metadata.get("chapter_name", "Unknown"),
+            "distance": distance,
+        }
+        # Carry page number through only when the corpus has one.
+        if "page_number" in metadata:
+            chunk["page_number"] = metadata["page_number"]
+        chunks.append(chunk)
     return chunks
 
 
 # --- Run directly to sanity-check retrieval -----------------------------------
 
 if __name__ == "__main__":
-    # Each question is paired with the chapter we EXPECT it to retrieve from.
-    # This is the Step 2.3 acceptance check: known questions should pull back
-    # chunks from the right chapter, proving semantic search actually works.
-    test_cases = [
-        ("How does the OS decide which process to run next?", "Scheduling Intro"),
-        ("What is a virtual address space?", "Address Spaces"),
-        ("Why can two threads deadlock?", "Concurrency Problems (Deadlocks)"),
-    ]
+    subject = sys.argv[1] if len(sys.argv) > 1 else "os"
 
-    # Open the store once and reuse it across all test queries.
-    collection = get_collection()
-    print(f"Collection holds {collection.count()} chunks.\n")
+    # Each question is paired with the section we EXPECT it to retrieve from,
+    # proving semantic search pulls the right source for a known question.
+    test_suites = {
+        "os": [
+            ("How does the OS decide which process to run next?", "Scheduling Intro"),
+            ("What is a virtual address space?", "Address Spaces"),
+            ("Why can two threads deadlock?", "Concurrency Problems (Deadlocks)"),
+        ],
+        "dsa": [
+            ("When would you use a sliding window?", "Sliding Window"),
+            ("How do you detect a cycle in a linked list?", "Linked Lists"),
+            ("What makes dynamic programming efficient?", "Dynamic Programming (intro-level)"),
+        ],
+    }
+    test_cases = test_suites.get(subject, [])
+
+    collection = get_collection(subject)
+    print(f"[{subject}] Collection holds {collection.count()} chunks.\n")
 
     passed = 0
-    for question, expected_chapter in test_cases:
-        chunks = retrieve(question, collection=collection)
-        top_chapter = chunks[0]["chapter_name"]
-        ok = top_chapter == expected_chapter
+    for question, expected_section in test_cases:
+        chunks = retrieve(question, collection=collection, subject=subject)
+        top_section = chunks[0]["chapter_name"] if chunks else "(none)"
+        ok = top_section == expected_section
         passed += ok
 
         print(f"Q: {question}")
-        print(f"   expected chapter: {expected_chapter}")
-        print(f"   top hit chapter : {top_chapter}  {'PASS' if ok else 'FAIL'}")
+        print(f"   expected: {expected_section}")
+        print(f"   top hit : {top_section}  {'PASS' if ok else 'FAIL'}")
         for chunk in chunks:
-            print(
-                f"     - {chunk['chapter_name']} "
-                f"(page {chunk['page_number']}, distance {chunk['distance']:.3f})"
-            )
+            page = f", page {chunk['page_number']}" if "page_number" in chunk else ""
+            print(f"     - {chunk['chapter_name']}{page} (distance {chunk['distance']:.3f})")
         print()
 
-    print(f"Sanity check: {passed}/{len(test_cases)} questions hit the right chapter.")
+    print(f"Sanity check: {passed}/{len(test_cases)} questions hit the right section.")
