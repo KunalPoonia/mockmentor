@@ -176,7 +176,7 @@ Runs a demo grade end-to-end (retrieve → grade with `qwen3:8b`) on one sample 
 | Concurrency: An Introduction | 284–298 |
 | Common Concurrency Problems (covers deadlocks) | 379–393 |
 
-**Subject #2 — DSA (mini-extension, Week 3):** Self-authored conceptual notes on 8-10 common interview patterns (Arrays, Two Pointers, Sliding Window, etc.), with topic selection informed by company-tag frequency data from public interview-question repositories. Not yet written — planned for Week 3.
+**Subject #2 — DSA (mini-extension):** Self-authored conceptual notes on 9 common interview patterns (Arrays & Two Pointers, Sliding Window, Binary Search, Linked Lists, Stacks & Queues, Recursion & Backtracking, Trees, Graphs, Dynamic Programming), stored at `data/raw/dsa_notes.md`. Ingested through the **same** pipeline as OSTEP into its own ChromaDB collection, and gradable in both UIs. Note: DSA notes are kept as markdown (not PDF like OSTEP) because sections are sliced reliably on `## ` headers — parsing those out of a PDF's extracted text is fragile.
 
 ---
 
@@ -195,7 +195,18 @@ See [`/docs/adr`](./docs/adr/). Minimum 3 required by Week 4; in progress:
 
 ## 8. Mini-Extension
 
-**Planned (Week 3):** Add DSA as a second subject, proving the RAG pipeline generalizes beyond a single corpus. Conceptual notes on 8-10 high-frequency interview topics will be authored, ingested through the same pipeline, and graded the same way as OS content. Not yet implemented.
+**Done — DSA as a second subject.** Nine interview-pattern topics (self-authored notes) are ingested, embedded, and graded through the exact same `ingest → embed_store → retrieve → evaluate` pipeline as OSTEP, proving the RAG design generalizes beyond a single corpus. Both subjects are selectable and functional in the web UI and the Streamlit UI.
+
+**Refactoring effort (the honest signal):** adding DSA was a *light-touch* change, not a rewrite — good evidence the original pipeline was reasonably well-generalized. What changed:
+
+- A small **per-subject corpus config** in `ingest.py` (source path + how to slice it) plus a second ingestion "kind" (`markdown_sections`) alongside the original `pdf_pages`. The existing OSTEP chunking was reused verbatim.
+- **One ChromaDB collection per subject** (`ostep`, `dsa`) — the OSTEP collection and its schema were left untouched; each subject queries its own store, so there's no cross-contamination.
+- Threaded a `subject` parameter through `retrieve` / `evaluate` / `server` (the grader's interviewer role is now set from the subject name), and made `page_number` **optional** in metadata (OSTEP is paginated; DSA topics are cited by name).
+- The UI was already data-driven from `/api/subjects`, so it needed only a `subject` field on the grade request and a page-optional source label — no structural UI change.
+
+**Verified (no regression):** OSTEP still ingests to the same 79 chunks and grades/cites as before; DSA grades sensibly across correct / partially-correct / incorrect answers and cites real DSA topics. Both work in the same running app with no cross-contamination.
+
+**Honest note on academic integrity:** the DSA notes in `data/raw/dsa_notes.md` were AI-drafted as a scaffold and should be rewritten in the author's own words before submission (flagged in the file header) — Doc 01 requires the authored content to be the student's own.
 
 ---
 
