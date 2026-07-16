@@ -408,6 +408,32 @@
     }
     .page-head-title { font-weight: 600; letter-spacing: -0.02em; }
 
+    /* --- Topic picker: a list of clickable rows with a difficulty badge --- */
+    .topic-row {
+        display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        width: 100%; text-align: left; cursor: pointer;
+        padding: 18px 20px; border-radius: 18px;
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+        transition: transform 0.25s cubic-bezier(0.22,1,0.36,1),
+                    background 0.2s ease, border-color 0.2s ease;
+    }
+    .topic-row:hover {
+        transform: translateY(-2px);
+        background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.22);
+    }
+    .diff-badge {
+        display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+        padding: 4px 12px; border-radius: 9999px;
+        font-size: 12px; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap;
+    }
+    .diff-badge::before {
+        content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor;
+    }
+    .diff-beginner    { background: rgba(76,175,80,0.14);  color: #81c784; border: 1px solid rgba(76,175,80,0.38); }
+    .diff-intermediate{ background: rgba(255,179,0,0.14);  color: #ffca28; border: 1px solid rgba(255,179,0,0.38); }
+    .diff-advanced    { background: rgba(244,67,54,0.14);  color: #e57373; border: 1px solid rgba(244,67,54,0.38); }
+
     /* --- Collapsible subject dropdown (Resources corpus) --- */
     .accordion {
         background: rgba(255,255,255,0.05);
@@ -502,10 +528,27 @@
     </div>
     <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-2 z-10">
       <button id="start-session-btn" class="primary-btn text-label-sm font-semibold rounded-full px-10 py-4 w-full sm:w-auto flex items-center justify-center gap-2 group" onclick="startSession()">
-        <span>Start Session</span>
+        <span>Choose a Topic</span>
         <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
       </button>
     </div>
+  </div>
+</main>
+
+<!-- ========================================================================= -->
+<!-- SCREEN 1b: Topic Selector                                                 -->
+<!-- ========================================================================= -->
+<main id="screen-topics" class="screen flex-grow flex-col items-center justify-center min-h-screen px-container-padding-mobile pb-24 relative z-10">
+  <div class="liquid-glass w-full max-w-[880px] rounded-[40px] p-8 md:p-12 flex flex-col gap-8 mt-24 relative overflow-hidden">
+    <div class="z-10">
+      <button class="text-on-surface-variant hover:text-primary transition-colors text-label-sm inline-flex items-center gap-1 mb-4" onclick="goHome()">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Subjects
+      </button>
+      <h1 class="text-display-lg-mobile md:text-display-lg text-primary mb-3 tracking-tight">Choose a Topic</h1>
+      <p class="text-body-lg text-on-surface-variant"><span id="topics-subject-label">Operating Systems</span> — pick a topic to practise. Each shows its difficulty.</p>
+    </div>
+    <!-- Topic list injected by JS -->
+    <div id="topic-list" class="flex flex-col gap-3 z-10"></div>
   </div>
 </main>
 
@@ -960,6 +1003,8 @@
 const state = {
   subjects: {},          // id -> {name, blurb, icon, available}
   selectedSubject: 'os', // default highlighted card
+  selectedTopic: null,   // topic id chosen on the topic screen
+  selectedTopicName: '', // topic display name (for labels)
   index: 0,              // which seed question (0-based)
   total: 10,             // count in the bank
   question: '',          // the question currently being asked
@@ -1317,8 +1362,15 @@ async function loadSubjects() {
       'Server unreachable', 'cloud_off');
     return;
   }
+  renderSubjects();
+}
+
+// Build the subject cards from cached state.subjects (no network). Selection
+// just re-runs this - fast and smooth, no fetch/round-trip per click.
+function renderSubjects() {
+  const grid = document.getElementById('subject-grid');
   grid.innerHTML = '';
-  // Available subjects first (OS leads, since it's the only one with a corpus).
+  // Available subjects first (they lead, since they have a corpus).
   const entries = Object.entries(state.subjects).sort(
     (a, b) => (b[1].available === true) - (a[1].available === true)
   );
@@ -1348,7 +1400,7 @@ async function loadSubjects() {
 function selectSubject(id) {
   if (!state.subjects[id] || !state.subjects[id].available) return;
   state.selectedSubject = id;
-  loadSubjects(); // re-render to move the active highlight
+  renderSubjects(); // re-render from cache to move the highlight - no fetch
 }
 
 function updateStartButton() {
@@ -1357,16 +1409,59 @@ function updateStartButton() {
   btn.disabled = !(s && s.available);
 }
 
-// ---- Flow: start session -> fetch first question ----
+// ---- Flow: start session -> pick a topic -> fetch first question ----
 async function startSession() {
+  await loadTopics();
+}
+
+const DIFF_CLASS = {
+  'Beginner': 'diff-beginner',
+  'Intermediate': 'diff-intermediate',
+  'Advanced': 'diff-advanced',
+};
+
+async function loadTopics() {
+  const listEl = document.getElementById('topic-list');
+  document.getElementById('topics-subject-label').textContent =
+    state.subjects[state.selectedSubject]?.name || 'Operating Systems';
+  listEl.innerHTML = '<p class="text-on-surface-variant opacity-70">Loading topics…</p>';
+  showScreen('topics');
+  try {
+    const res = await fetch(`/api/topics?subject=${state.selectedSubject}`);
+    const data = await res.json();
+    if (data.error) { showError(data.error, "Couldn't load topics"); return; }
+    renderTopics(data.topics);
+  } catch (e) {
+    showError('Could not load topics. Make sure the server is running (python src/server.py).',
+      'Server unreachable', 'cloud_off');
+  }
+}
+
+function renderTopics(topics) {
+  state.topics = topics;   // stash so selectTopic can look up the name by id
+  const listEl = document.getElementById('topic-list');
+  listEl.innerHTML = topics.map(t => {
+    const cls = DIFF_CLASS[t.difficulty] || 'diff-beginner';
+    return `<button class="topic-row" onclick="selectTopic('${t.id}')">
+      <span class="text-body-lg text-primary truncate min-w-0">${escapeHtml(t.name)}</span>
+      <span class="diff-badge ${cls}">${escapeHtml(t.difficulty)}</span>
+    </button>`;
+  }).join('');
+}
+
+function selectTopic(topicId) {
+  const topic = (state.topics || []).find(t => t.id === topicId);
+  state.selectedTopic = topicId;
+  state.selectedTopicName = topic ? topic.name : '';
   state.index = 0;
   state.isFollowup = false;
-  await loadQuestion();
+  loadQuestion();
 }
 
 async function loadQuestion() {
   try {
-    const res = await fetch(`/api/question?subject=${state.selectedSubject}&index=${state.index}`);
+    const topicParam = state.selectedTopic ? `&topic=${state.selectedTopic}` : '';
+    const res = await fetch(`/api/question?subject=${state.selectedSubject}${topicParam}&index=${state.index}`);
     const data = await res.json();
     if (data.error) { showError(data.error, "Couldn't load the question"); return; }
     state.question = data.question;
@@ -1381,7 +1476,9 @@ async function loadQuestion() {
 }
 
 function renderQuestion() {
-  document.getElementById('q-subject-label').textContent = state.subjects[state.selectedSubject]?.name || 'Operating Systems';
+  const subjName = state.subjects[state.selectedSubject]?.name || 'Operating Systems';
+  document.getElementById('q-subject-label').textContent =
+    state.selectedTopicName ? `${subjName} · ${state.selectedTopicName}` : subjName;
   document.getElementById('q-text').textContent = state.question;
   const n = state.isFollowup ? state.index + 1 : state.index + 1;
   document.getElementById('q-progress-label').textContent = state.isFollowup
@@ -1498,6 +1595,8 @@ function goHome() {
   setNavActive('practice');
   state.isFollowup = false;
   state.index = 0;
+  state.selectedTopic = null;
+  state.selectedTopicName = '';
   showScreen('selector');
   loadSubjects();
 }
