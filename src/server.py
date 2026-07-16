@@ -31,7 +31,7 @@ from flask import Flask, jsonify, request, send_from_directory
 # src/ on the path so these resolve.
 from embed_store import get_collection
 from evaluate import grade_answer
-from questions import get_questions, get_subjects
+from questions import get_questions, get_subjects, get_topics
 from retrieve import retrieve
 
 
@@ -88,30 +88,45 @@ def api_subjects():
     return jsonify(get_subjects())
 
 
+@app.route("/api/topics")
+def api_topics():
+    """Return a subject's topics (id, name, difficulty, count) for the topic
+    picker. Query param: subject (default "os")."""
+    subject = request.args.get("subject", "os")
+    topics = get_topics(subject)
+    if not topics:
+        return jsonify({"error": f"No topics available for '{subject}'."}), 404
+    return jsonify({"subject": subject, "topics": topics})
+
+
 @app.route("/api/question")
 def api_question():
-    """Return one seed question for a subject.
+    """Return one seed question for a subject (optionally within a topic).
 
     Query params:
         subject: subject id (default "os")
+        topic:   topic id (optional; if omitted, the whole subject bank is used)
         index:   which seed question to serve (default 0), so the UI can walk
-                 through the bank as "Question N of 10".
+                 through the topic as "Question N of M".
     """
     subject = request.args.get("subject", "os")
+    topic = request.args.get("topic") or None
     try:
         index = int(request.args.get("index", 0))
     except ValueError:
         index = 0
 
-    questions = get_questions(subject)
+    questions = get_questions(subject, topic)
     if not questions:
-        return jsonify({"error": f"No questions available for '{subject}'."}), 404
+        where = f"'{subject}'" + (f" / topic '{topic}'" if topic else "")
+        return jsonify({"error": f"No questions available for {where}."}), 404
 
     # Wrap around if the index runs past the end of the bank.
     index = index % len(questions)
     return jsonify(
         {
             "subject": subject,
+            "topic": topic,
             "index": index,
             "total": len(questions),
             "question": questions[index],
