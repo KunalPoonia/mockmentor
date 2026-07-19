@@ -869,11 +869,11 @@
 </div>
 
 <!-- ===================== Session report card (shown on End session) ===================== -->
-<div id="report-modal" class="modal-overlay" onclick="if (event.target === this) finishSession()">
+<div id="report-modal" class="modal-overlay" onclick="if (event.target === this) closeReport()">
   <div class="nav-panel" style="max-width:520px;">
     <div class="nav-panel-head">
       <h3>Session Report</h3>
-      <button class="nav-close" onclick="finishSession()" title="Close"><span class="material-symbols-outlined text-[20px]">close</span></button>
+      <button class="nav-close" onclick="closeReport()" title="Close"><span class="material-symbols-outlined text-[20px]">close</span></button>
     </div>
     <div id="report-body" class="nav-panel-body flex flex-col gap-5"></div>
   </div>
@@ -1403,7 +1403,7 @@ function clearHistory() {
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   hideError(); closeNav(); closeResourceModal();
-  if (document.getElementById('report-modal').classList.contains('show')) finishSession();
+  if (document.getElementById('report-modal').classList.contains('show')) closeReport();
 });
 
 // ---- Grading status rotation (only runs while grading screen is up) ----
@@ -1698,6 +1698,12 @@ function endSession() {
   document.getElementById('report-modal').classList.add('show');
 }
 
+// Dismiss the report but stay in the current session (X / overlay / Esc).
+function closeReport() {
+  document.getElementById('report-modal').classList.remove('show');
+}
+
+// Close the report AND leave the session for the home screen ("Done" button).
 function finishSession() {
   document.getElementById('report-modal').classList.remove('show');
   goHome();
