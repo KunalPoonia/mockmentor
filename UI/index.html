@@ -434,6 +434,11 @@
     .diff-intermediate{ background: rgba(255,179,0,0.14);  color: #ffca28; border: 1px solid rgba(255,179,0,0.38); }
     .diff-advanced    { background: rgba(244,67,54,0.14);  color: #e57373; border: 1px solid rgba(244,67,54,0.38); }
 
+    /* --- Session report card --- */
+    .report-score { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 6px 0 2px; }
+    .report-score .num { font-size: 46px; font-weight: 700; line-height: 1; color: #fff; }
+    .report-score .num small { font-size: 20px; font-weight: 600; opacity: 0.55; }
+
     /* --- Collapsible subject dropdown (Resources corpus) --- */
     .accordion {
         background: rgba(255,255,255,0.05);
@@ -663,7 +668,7 @@
         Answer Follow-up <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
       </button>
     </div>
-    <button class="mt-2 text-on-surface-variant hover:text-primary transition-colors text-label-sm underline underline-offset-4 decoration-white/20 hover:decoration-white/60" onclick="goHome()">End session &amp; pick a new subject</button>
+    <button class="mt-2 text-on-surface-variant hover:text-primary transition-colors text-label-sm underline underline-offset-4 decoration-white/20 hover:decoration-white/60" onclick="endSession()">End session &amp; see report</button>
   </div>
 </main>
 
@@ -860,6 +865,17 @@
         <button class="glass-btn-secondary text-label-sm rounded-full px-6 py-2.5 text-primary" onclick="closeResourceModal()">Done</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ===================== Session report card (shown on End session) ===================== -->
+<div id="report-modal" class="modal-overlay" onclick="if (event.target === this) finishSession()">
+  <div class="nav-panel" style="max-width:520px;">
+    <div class="nav-panel-head">
+      <h3>Session Report</h3>
+      <button class="nav-close" onclick="finishSession()" title="Close"><span class="material-symbols-outlined text-[20px]">close</span></button>
+    </div>
+    <div id="report-body" class="nav-panel-body flex flex-col gap-5"></div>
   </div>
 </div>
 
@@ -1384,7 +1400,11 @@ function clearHistory() {
 }
 
 // Dismiss modals on Escape.
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { hideError(); closeNav(); closeResourceModal(); } });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  hideError(); closeNav(); closeResourceModal();
+  if (document.getElementById('report-modal').classList.contains('show')) finishSession();
+});
 
 // ---- Grading status rotation (only runs while grading screen is up) ----
 const GRADING_MESSAGES = [
@@ -1642,6 +1662,45 @@ function answerFollowup() {
   state.isFollowup = true;
   renderQuestion();
   showScreen('question');
+}
+
+// ---- End-of-session report card ----
+function endSession() {
+  // Nothing graded yet -> just go back, no empty report.
+  if (!state.history.length) { goHome(); return; }
+
+  const total = state.history.length;
+  const avg = state.history.reduce((a, h) => a + (Number(h.score) || 0), 0) / total;
+  const pct = Math.round((avg / 5) * 100);
+  const counts = { 'Correct': 0, 'Partially Correct': 0, 'Incorrect': 0 };
+  state.history.forEach(h => { if (counts[h.verdict] != null) counts[h.verdict]++; });
+
+  const grade = avg >= 4.5 ? { label: 'Excellent', cls: 'diff-beginner' }
+    : avg >= 3.5 ? { label: 'Strong', cls: 'diff-beginner' }
+    : avg >= 2.5 ? { label: 'Fair', cls: 'diff-intermediate' }
+    : avg >= 1.5 ? { label: 'Needs work', cls: 'diff-advanced' }
+    : { label: 'Keep practising', cls: 'diff-advanced' };
+
+  document.getElementById('report-body').innerHTML = `
+    <div class="report-score">
+      <span class="num">${avg.toFixed(1)}<small>/5</small></span>
+      <span class="diff-badge ${grade.cls}">${grade.label} · ${pct}%</span>
+      <span class="text-label-sm text-on-surface-variant mt-1">${total} question${total === 1 ? '' : 's'} answered this session</span>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+      ${statTile('Correct', counts['Correct'], 'check_circle', 'text-[#81c784]')}
+      ${statTile('Partial', counts['Partially Correct'], 'warning', 'text-[#ffca28]')}
+      ${statTile('Incorrect', counts['Incorrect'], 'cancel', 'text-[#e57373]')}
+    </div>
+    ${renderWeakness()}
+    <button class="primary-btn text-label-sm font-semibold rounded-full px-8 py-3 mt-1 inline-flex items-center justify-center gap-2" onclick="finishSession()">
+      <span class="material-symbols-outlined text-[18px]">home</span>Done — pick a new subject</button>`;
+  document.getElementById('report-modal').classList.add('show');
+}
+
+function finishSession() {
+  document.getElementById('report-modal').classList.remove('show');
+  goHome();
 }
 
 function goHome() {
