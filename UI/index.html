@@ -951,16 +951,24 @@
     });
   }
 
-  function frame() {
+  // The drawImage + getImageData readback is a GPU->CPU pipeline stall and the
+  // single most expensive thing in this loop; it competes with video decode and
+  // the stacked backdrop-filter blurs. Run it at ~22Hz instead of every frame -
+  // the reflections are already heavily temporally smoothed, so the throttle is
+  // visually indistinguishable while cutting the readback cost ~3x. The panel
+  // easing below still runs every animation frame off the last sample.
+  let lastSample = -1e9;
+  const SAMPLE_MS = 45;
+
+  function frame(now) {
     // Reduced-motion: freeze reflections (skip sampling) but keep the loop alive
     // so it resumes instantly when re-enabled.
     if (window.motionReduced) { requestAnimationFrame(frame); return; }
-    let ok = false;
-    if (media) {
-      try { bctx.drawImage(media, 0, 0, SW, SH); pixels = bctx.getImageData(0, 0, SW, SH).data; ok = true; }
-      catch (e) { ok = false; }   // not ready / cross-origin -> no reflection
+    if (media && (now - lastSample) >= SAMPLE_MS) {
+      try { bctx.drawImage(media, 0, 0, SW, SH); pixels = bctx.getImageData(0, 0, SW, SH).data; lastSample = now; }
+      catch (e) {}   // not ready / cross-origin -> reuse last sample (or none yet)
     }
-    if (!ok) { clearAll(); requestAnimationFrame(frame); return; }
+    if (!pixels) { clearAll(); requestAnimationFrame(frame); return; }
 
     const sx = SW / window.innerWidth, sy = SH / window.innerHeight;
     const band = 3;   // edge sample thickness, in background pixels
