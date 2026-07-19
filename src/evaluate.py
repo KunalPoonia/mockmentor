@@ -31,8 +31,8 @@ import ollama
 
 # retrieve lives alongside this file in src/; flat import matches the rest of
 # the project (embed_store's `from ingest import ...`, retrieve's `from
-# embed_store import ...`). Resolves under `python src/evaluate.py` and
-# `streamlit run src/app.py`.
+# embed_store import ...`). Resolves under `python src/evaluate.py` and when
+# imported by the Flask server.
 from retrieve import retrieve
 from questions import get_subjects
 
@@ -138,8 +138,8 @@ def parse_response(raw):
 
     data = json.loads(match.group(0))
 
-    # Normalise: guarantee every expected key exists so callers (the Streamlit
-    # UI) can render without KeyErrors even if the model omitted one.
+    # Normalise: guarantee every expected key exists so callers (the web UI)
+    # can render without KeyErrors even if the model omitted one.
     for key in EXPECTED_KEYS:
         data.setdefault(key, None)
 

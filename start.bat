@@ -1,12 +1,11 @@
 @echo off
-REM MockMentor launcher - double-click (or run from cmd) to start the project.
-REM Activates the venv and hands off to run.py, which lets you pick the UI:
-REM   1) Streamlit UI      (classic dashboard)
-REM   2) Liquid-glass web  (custom Flask single-page app)
+REM MockMentor launcher - double-click (or run from cmd) to start the web app.
+REM Activates the venv's Python and runs the Flask server, then open
+REM http://localhost:5000 in your browser.
 REM
-REM Requires: venv already created (python -m venv venv) with dependencies
-REM installed (pip install -r requirements.txt), and Ollama running with
-REM qwen3:8b pulled.
+REM Requires: venv created (python -m venv venv) with deps installed
+REM (pip install -r requirements.txt), Ollama running with qwen3:8b pulled,
+REM and a built chroma_db/ (python src\embed_store.py once).
 
 cd /d "%~dp0"
 
@@ -23,10 +22,10 @@ if not exist "venv\Scripts\python.exe" (
 
 echo.
 echo ============================================
-echo   Starting MockMentor...
+echo   Starting MockMentor  ^-^>  http://localhost:5000
 echo ============================================
 echo.
 
-venv\Scripts\python.exe run.py %*
+venv\Scripts\python.exe src\server.py
 
 pause

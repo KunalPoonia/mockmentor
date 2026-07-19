@@ -41,7 +41,7 @@ User Question
 Verdict + Score + Explanation + Model Answer + Sources + Adaptive Follow-up
      │
      ▼
-[UI] ──(Flask web app at :5000, or Streamlit for testing)
+[UI] ──(Flask web app at :5000)
 ```
 
 ---
@@ -54,8 +54,7 @@ Verdict + Score + Explanation + Model Answer + Sources + Adaptive Follow-up
 | Vector store | ChromaDB | Simple local setup, persists to disk, integrates cleanly with local embeddings |
 | LLM (grading + follow-up) | Qwen3 8B, via Ollama | Fully local — zero ongoing cost, offline-capable, fits within 6GB VRAM (RTX 4050) at acceptable speed (~20 tok/s); fallback: Llama 3.1 8B |
 | PDF parsing | `pypdf` | Lightweight, sufficient for text-based academic PDFs |
-| UI (main) | Flask + static single-page app (liquid-glass design) | Serves the polished interview UI and exposes the RAG pipeline over a small JSON API (`/api/question`, `/api/grade`); no browser framework needed |
-| UI (testing) | Streamlit | Fastest path to a working interactive app for quick pipeline iteration |
+| UI | Flask + static single-page app (liquid-glass design) | Serves the polished interview UI and exposes the RAG pipeline over a small JSON API (`/api/topics`, `/api/question`, `/api/grade`); no browser framework needed |
 | Corpus (Subject #1) | *Operating Systems: Three Easy Pieces* (OSTEP), 5 selected chapters | Free, well-structured, long-form explanatory text — well-suited to RAG retrieval; widely used in CS coursework |
 
 Full reasoning for the local-vs-API and model-selection decisions is documented in [ADRs](#8-architecture-decision-records-adrs) (in progress).
@@ -97,7 +96,7 @@ See `data/raw/README.md` for exact instructions.
 
 ### Run
 
-> ⚠️ **Activate the venv first.** Every command below must run inside the virtual environment — that's where `chromadb`, `streamlit`, etc. live. If you run a bare `streamlit`/`python` from a plain terminal it uses your *global* Python and fails with `No module named chromadb`.
+> ⚠️ **Activate the venv first.** Every command below must run inside the virtual environment — that's where `chromadb`, `flask`, etc. live. If you run a bare `python` from a plain terminal it uses your *global* Python and fails with `No module named chromadb`.
 >
 > ```bash
 > # Windows:
@@ -105,23 +104,17 @@ See `data/raw/README.md` for exact instructions.
 > # macOS/Linux:
 > source venv/bin/activate
 > ```
-> Your prompt should now show `(venv)`. (Or skip activation and call the venv copy directly, e.g. `venv\Scripts\streamlit run src/app.py`.)
+> Your prompt should now show `(venv)`. (Or skip activation and call the venv copy directly, e.g. `venv\Scripts\python src/server.py`.)
 
-> **Both UIs require Ollama running with `qwen3:8b` and a built `chroma_db/`.** If you haven't embedded the corpus yet, run `python src/embed_store.py` once first (see the data-layer scripts below).
+> **The web app requires Ollama running with `qwen3:8b` and a built `chroma_db/`.** If you haven't embedded the corpus yet, run `python src/embed_store.py` once first (see the data-layer scripts below).
 
-**Launcher — switch between the two UIs from one entry point:**
-```bash
-python run.py            # interactive menu: 1) Streamlit  2) Web (liquid-glass)
-python run.py web        # go straight to the web app
-python run.py streamlit  # go straight to the Streamlit app
-```
-On Windows, double-click **`start.bat`** (or run it from `cmd`) to activate the venv and launch the same menu without typing the `venv\Scripts\python.exe` path yourself. Only one UI runs at a time — stop it (Ctrl+C) and re-run the launcher to switch.
-
-**Web app — the main interface (Flask + liquid-glass UI):**
+**Web app — the interface (Flask + liquid-glass UI):**
 ```bash
 python src/server.py
 ```
-Then open **http://localhost:5000**. This is the primary front end: a single-page app that walks you through the full flow —
+On Windows you can instead just double-click **`start.bat`** (it uses the venv's Python and starts the server for you).
+
+Then open **http://localhost:5000**. It's a single-page app that walks you through the full flow —
 
 1. **Choose Your Subject** (home page) — Operating Systems and Data Structures & Algorithms are live; others show as *Coming soon*.
 2. **Choose a Topic** — a list of the subject's topics, each with a **difficulty badge** (Beginner / Intermediate / Advanced). Pick one to scope the session.
@@ -131,12 +124,6 @@ Then open **http://localhost:5000**. This is the primary front end: a single-pag
 6. **History / Resources** — full pages (not popups). History shows this session's graded answers with stats **and a "Strengths & gaps by topic" weakness report** (per-topic average, sorted weakest-first). Resources shows the corpus (grouped by subject in collapsible dropdowns) plus your own uploaded/linked study material.
 
 Under the hood the server reuses the same pipeline as everything else: `GET /api/topics` and `GET /api/question` serve from `src/questions.py`, and `POST /api/grade` runs `retrieve.py` → `evaluate.py` against the selected subject's collection. Collections are opened once at startup and shared across requests. If Ollama isn't running, the UI shows a clear message instead of failing silently.
-
-**Streamlit app — lightweight/alternate UI:**
-```bash
-streamlit run src/app.py
-```
-A simpler dashboard-style interface for quick iteration on the pipeline, or to demo without the full custom web UI: pick a chapter + question in the sidebar, submit an answer, and see the same RAG-grounded grade (verdict, score, feedback, model answer, follow-up, sources), plus live session stats and history. Same pipeline as the web app underneath — only the presentation differs.
 
 **Data-layer scripts (run individually to verify each stage):**
 ```bash
@@ -184,7 +171,7 @@ Two suites (14 tests):
 | Concurrency: An Introduction | 284–298 |
 | Common Concurrency Problems (covers deadlocks) | 379–393 |
 
-**Subject #2 — DSA (mini-extension):** Self-authored conceptual notes on 9 common interview patterns (Arrays & Two Pointers, Sliding Window, Binary Search, Linked Lists, Stacks & Queues, Recursion & Backtracking, Trees, Graphs, Dynamic Programming), stored at `data/raw/dsa_notes.md`. Ingested through the **same** pipeline as OSTEP into its own ChromaDB collection, and gradable in both UIs. Note: DSA notes are kept as markdown (not PDF like OSTEP) because sections are sliced reliably on `## ` headers — parsing those out of a PDF's extracted text is fragile.
+**Subject #2 — DSA (mini-extension):** Self-authored conceptual notes on 9 common interview patterns (Arrays & Two Pointers, Sliding Window, Binary Search, Linked Lists, Stacks & Queues, Recursion & Backtracking, Trees, Graphs, Dynamic Programming), stored at `data/raw/dsa_notes.md`. Ingested through the **same** pipeline as OSTEP into its own ChromaDB collection, and gradable in the web app. Note: DSA notes are kept as markdown (not PDF like OSTEP) because sections are sliced reliably on `## ` headers — parsing those out of a PDF's extracted text is fragile.
 
 ---
 
@@ -203,7 +190,7 @@ See [`/docs/adr`](./docs/adr/). Minimum 3 required by Week 4; in progress:
 
 ## 8. Mini-Extension
 
-**Done — DSA as a second subject.** Nine interview-pattern topics (self-authored notes) are ingested, embedded, and graded through the exact same `ingest → embed_store → retrieve → evaluate` pipeline as OSTEP, proving the RAG design generalizes beyond a single corpus. Both subjects are selectable and functional in the web UI and the Streamlit UI.
+**Done — DSA as a second subject.** Nine interview-pattern topics (self-authored notes) are ingested, embedded, and graded through the exact same `ingest → embed_store → retrieve → evaluate` pipeline as OSTEP, proving the RAG design generalizes beyond a single corpus. Both subjects are selectable and functional in the web app.
 
 **Refactoring effort (the honest signal):** adding DSA was a *light-touch* change, not a rewrite — good evidence the original pipeline was reasonably well-generalized. What changed:
 

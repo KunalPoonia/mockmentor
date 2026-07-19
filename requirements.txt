@@ -1,7 +1,6 @@
 # Core dependencies for MockMentor
 chromadb>=0.4.0
 sentence-transformers>=2.0.0
-streamlit>=1.30.0
 flask>=3.0.0
 pypdf>=4.0.0
 ollama>=0.1.0

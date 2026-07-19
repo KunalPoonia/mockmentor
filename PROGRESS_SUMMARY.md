@@ -158,7 +158,7 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 ✅ **`src/embed_store.py` built & verified — 79 chunks embedded into ChromaDB (`ostep` collection)**  
 ✅ **`src/retrieve.py` built & verified — top-k (k=3) semantic retrieval, known questions hit the right chapter**  
 ✅ **`src/evaluate.py` built & verified — RAG-grounded grading + `model_answer` + adaptive follow-up (qwen3:8b, JSON output)**  
-✅ **`src/app.py` built & verified — Streamlit UI (now the lightweight *testing* front end)**  
+✅ **`src/app.py` — Streamlit UI (built early as a testing front end; later removed — the web app is final)**  
 ✅ **`src/server.py` + `src/questions.py` — Flask backend: serves the SPA + `/api/subjects`, `/api/question`, `/api/grade`; hardened error responses**  
 ✅ **`UI/index.html` — single-page liquid-glass web app (the primary UI): selector → question → grading → verdict → follow-up loop**  
 ✅ **Adaptive glass lighting** — background-agnostic reflections that sample the live background and light each panel edge; smooth, flicker-free  
@@ -170,7 +170,7 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 ✅ **Topic selection + difficulty** — after choosing a subject you pick a topic from a list, each tagged **Beginner / Intermediate / Advanced**. OS was expanded from a flat 10-question bank into **6 topics**; DSA has 9. Backed by `/api/topics` and a `topic` filter on `/api/question`.  
 ✅ **Weakness report** — the History page now shows a **"Strengths & gaps by topic"** summary (per-topic average score, weakest-first) alongside the answer log.  
 ✅ **Tests** — `tests/test_evaluate.py` (offline: JSON-schema/`parse_response` + `format_context`) and `tests/test_retrieve.py` (integration: OS & DSA known questions hit the right section). **14 passing** via pytest.  
-✅ **Launcher** — `run.py` / `start.bat` to switch between the web (Flask) and Streamlit UIs.  
+✅ **Single UI (final)** — the Streamlit app (`app.py`) and the UI switch (`run.py`) were removed; the Flask + liquid-glass web app is the one and only front end. `start.bat` now launches it directly.  
 ✅ **Repo tidy** — historical Stitch mockups, design notes, and the standalone shader moved under `docs/design/`; `UI/` now holds only what the app serves (`index.html` + `animated_background/white.mp4`).  
 
 ### **What's Next (Week 4 - deploy + docs):**
@@ -179,7 +179,7 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 ⏳ **Deploy** via ngrok / Cloudflare tunnel (local machine + public URL)  
 ⏳ **Loom** walkthrough + **reflection piece** (1000–1500 words)  
 
-**UI note:** the **Flask web app (`UI/index.html`)** is the primary front end; **Streamlit (`app.py`)** is a full alternate UI (switch via `run.py`). The original Stitch mockups now live under `docs/design/mockups/`.  
+**UI note:** the **Flask web app (`UI/index.html`)** is the sole front end. The earlier Streamlit UI and the two-UI launcher were removed once the web app was finalized. The original Stitch mockups live under `docs/design/mockups/`.  
 
 ---
 
@@ -209,7 +209,9 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 - No GPU required for embedding (saves memory for LLM)
 - Standard choice for local RAG projects
 
-### **5. Why Streamlit?**
+### **5. Why Streamlit? (later removed)**
+*Streamlit was used early as a quick testing UI, then removed once the Flask + liquid-glass web app became the final interface. The original reasoning is kept below for history.*
+
 - Rapid prototyping (no HTML/CSS/JS needed)
 - Built-in session state for conversation history
 - Easy deployment (one command: `streamlit run app.py`)
