@@ -688,6 +688,9 @@
     <!-- Stats (filled by JS) -->
     <div id="history-stats" class="grid grid-cols-2 sm:grid-cols-4 gap-3 z-10"></div>
 
+    <!-- Strengths & gaps summary (filled by JS) -->
+    <div id="history-summary" class="z-10"></div>
+
     <!-- Answer log (filled by JS) -->
     <div id="history-list" class="flex flex-col gap-4 z-10"></div>
   </div>
@@ -1070,13 +1073,62 @@ function statTile(label, value, icon, colorCls) {
     <span class="text-label-sm text-on-surface-variant">${label}</span>
   </div>`;
 }
+// Build the end-of-session "Strengths & gaps" summary: group graded answers by
+// topic (falling back to subject), average their scores, and surface the
+// weakest groups first so the student sees what to review.
+function renderWeakness() {
+  const groups = {};
+  state.history.forEach(h => {
+    const key = h.topic || h.subject || 'General';
+    (groups[key] = groups[key] || { scores: [], total: 0 });
+    groups[key].scores.push(Number(h.score) || 0);
+    groups[key].total++;
+  });
+  const rows = Object.entries(groups).map(([name, g]) => ({
+    name,
+    total: g.total,
+    avg: g.scores.reduce((a, b) => a + b, 0) / g.total,
+  })).sort((a, b) => a.avg - b.avg);   // gaps first
+
+  const band = (avg) => avg >= 4 ? { label: 'Strong', cls: 'diff-beginner', color: '#81c784' }
+    : avg >= 2.5 ? { label: 'Fair', cls: 'diff-intermediate', color: '#ffca28' }
+    : { label: 'Needs work', cls: 'diff-advanced', color: '#e57373' };
+
+  const rowsHtml = rows.map(r => {
+    const b = band(r.avg);
+    const pct = Math.round((r.avg / 5) * 100);
+    return `<div class="stat-tile" style="gap:10px;">
+      <div class="flex items-center justify-between gap-3">
+        <span class="text-body-md text-on-surface truncate">${escapeHtml(r.name)}</span>
+        <span class="diff-badge ${b.cls}">${b.label}</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <div style="flex:1;height:6px;border-radius:9999px;background:rgba(255,255,255,0.08);overflow:hidden;">
+          <div style="height:100%;width:${pct}%;border-radius:9999px;background:${b.color};"></div>
+        </div>
+        <span class="text-label-sm text-on-surface-variant whitespace-nowrap">${r.avg.toFixed(1)}/5 · ${r.total}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="flex flex-col gap-3">
+    <div class="flex items-center gap-2 text-on-surface-variant">
+      <span class="material-symbols-outlined text-[18px]">insights</span>
+      <span class="text-label-sm uppercase tracking-wider">Strengths &amp; gaps by topic</span>
+    </div>
+    ${rowsHtml}
+  </div>`;
+}
+
 function renderHistory() {
   const statsEl = document.getElementById('history-stats');
+  const summaryEl = document.getElementById('history-summary');
   const listEl = document.getElementById('history-list');
   const clearBtn = document.getElementById('history-clear-btn');
 
   if (!state.history.length) {
     statsEl.innerHTML = '';
+    if (summaryEl) summaryEl.innerHTML = '';
     if (clearBtn) clearBtn.style.display = 'none';
     listEl.innerHTML = `<div class="flex flex-col items-center text-center" style="padding:32px 20px 12px;">
       <span class="material-symbols-outlined text-[48px] text-on-surface-variant">history</span>
@@ -1099,6 +1151,8 @@ function renderHistory() {
     statTile('Correct', counts['Correct'], 'check_circle', 'text-[#81c784]'),
     statTile('Needs work', counts['Partially Correct'] + counts['Incorrect'], 'error', 'text-[#ffca28]'),
   ].join('');
+
+  if (summaryEl) summaryEl.innerHTML = renderWeakness();
 
   listEl.innerHTML = state.history.map((h, i) => {
     const v = VERDICT_STYLE[h.verdict] || { cls: 'verdict-chip-red', icon: 'help' };
@@ -1522,6 +1576,7 @@ async function submitAnswer() {
       score: result.score,
       explanation: result.explanation,
       subject: state.subjects[state.selectedSubject]?.name || '',
+      topic: state.selectedTopicName || '',
       isFollowup: state.isFollowup,
     });
     renderVerdict(result);
