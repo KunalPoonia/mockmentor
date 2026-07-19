@@ -123,13 +123,14 @@ python src/server.py
 ```
 Then open **http://localhost:5000**. This is the primary front end: a single-page app that walks you through the full flow —
 
-1. **Choose Your Subject** (home page) — Operating Systems is live; other subjects show as *Coming soon*.
-2. **Question** — a question from the OSTEP-backed bank (10 per session); type your answer.
-3. **Grading** — an animated state while `qwen3:8b` evaluates your response.
-4. **Verdict** — colour-coded verdict + score, feedback, a **model answer**, the OSTEP **sources** the grade was based on, and an adaptive **follow-up** you can answer to continue the session.
-5. **History / Resources** — full pages (not popups) showing this session's graded answers with stats, and the course corpus (grouped by subject in collapsible dropdowns) plus your own uploaded/linked study resources.
+1. **Choose Your Subject** (home page) — Operating Systems and Data Structures & Algorithms are live; others show as *Coming soon*.
+2. **Choose a Topic** — a list of the subject's topics, each with a **difficulty badge** (Beginner / Intermediate / Advanced). Pick one to scope the session.
+3. **Question** — a question from the chosen topic; type your answer.
+4. **Grading** — an animated state while `qwen3:8b` evaluates your response.
+5. **Verdict** — colour-coded verdict + score, feedback, a **model answer**, the **sources** the grade was based on, and an adaptive **follow-up** you can answer to continue.
+6. **History / Resources** — full pages (not popups). History shows this session's graded answers with stats **and a "Strengths & gaps by topic" weakness report** (per-topic average, sorted weakest-first). Resources shows the corpus (grouped by subject in collapsible dropdowns) plus your own uploaded/linked study material.
 
-Under the hood the server reuses the same pipeline as everything else: `GET /api/question` serves questions from `src/questions.py`, and `POST /api/grade` runs `retrieve.py` → `evaluate.py`. The ChromaDB collection is opened once at startup and shared across requests. If Ollama isn't running, the UI shows a clear message instead of failing silently.
+Under the hood the server reuses the same pipeline as everything else: `GET /api/topics` and `GET /api/question` serve from `src/questions.py`, and `POST /api/grade` runs `retrieve.py` → `evaluate.py` against the selected subject's collection. Collections are opened once at startup and shared across requests. If Ollama isn't running, the UI shows a clear message instead of failing silently.
 
 **Streamlit app — lightweight/alternate UI:**
 ```bash
@@ -160,7 +161,14 @@ Runs a demo grade end-to-end (retrieve → grade with `qwen3:8b`) on one sample 
 
 ### Test
 
-> 🚧 Tests are planned for Week 3, per the project scope (1-2 tests is the internship standard for this level). `tests/` directory is scaffolded.
+```bash
+venv\Scripts\python.exe -m pytest tests -q     # Windows
+# or, with the venv active:  pytest -q
+```
+
+Two suites (14 tests):
+- `tests/test_evaluate.py` — offline unit tests for the grader's output handling: `parse_response` always returns the full JSON schema, coerces the score, strips qwen3 `<think>` blocks, extracts JSON wrapped in prose, and raises on no-JSON; `format_context` includes a page for OSTEP chunks and omits it for DSA. No Ollama needed.
+- `tests/test_retrieve.py` — integration tests over the real ChromaDB collections: known OS/DSA questions retrieve the correct section, top-k shape is right, and page metadata is present only for paginated corpora. Requires the stores built (`python src/embed_store.py`); tests **skip** with a clear message if not.
 
 ---
 

@@ -1,6 +1,6 @@
 # MockMentor - Complete Progress Summary
 it's a personal/supplementary log, not the official status doc
-**Last Updated:** July 6, 2026
+**Last Updated:** July 2026 (post DSA extension, topic selection, and tests)
 
 ---
 
@@ -165,13 +165,21 @@ fa4cbec - docs: remove roadmap from repo (keeping as personal planning doc)
 ✅ **Styled error popups** (Ollama down / server unreachable) replacing browser `alert()`  
 ✅ **Functional navbar** — History (session log), Resources (corpus + add custom resources), Settings (reduce-motion + model info), Account (guest)  
 
-### **What's Next (Week 3 - Hardening & backend follow-ups):**
-⏳ Add 1–2 tests in `tests/` (retrieve hits right chapter; evaluate returns valid JSON schema)  
-⏳ Wire **custom resources** (currently localStorage-only) into the RAG corpus — the deferred backend step  
-⏳ Optional: **difficulty selector** (Mid/Senior/Staff) that adjusts grading strictness (`evaluate.py` + `server.py`)  
-⏳ Decide on the two `UI/animated_background/*.mp4` files — commit or gitignore (~19 MB)  
+### **Since shipped (post-Jul 6):**
+✅ **DSA added as Subject #2** — the pipeline was generalized to multiple subjects (per-subject corpus config in `ingest.py` + one ChromaDB collection per subject). DSA notes (`data/raw/dsa_notes.md`, 9 pattern topics) are ingested/embedded and gradable in both UIs, with **no OS regression** — the core proof that the RAG design generalizes beyond one corpus.  
+✅ **Topic selection + difficulty** — after choosing a subject you pick a topic from a list, each tagged **Beginner / Intermediate / Advanced**. OS was expanded from a flat 10-question bank into **6 topics**; DSA has 9. Backed by `/api/topics` and a `topic` filter on `/api/question`.  
+✅ **Weakness report** — the History page now shows a **"Strengths & gaps by topic"** summary (per-topic average score, weakest-first) alongside the answer log.  
+✅ **Tests** — `tests/test_evaluate.py` (offline: JSON-schema/`parse_response` + `format_context`) and `tests/test_retrieve.py` (integration: OS & DSA known questions hit the right section). **14 passing** via pytest.  
+✅ **Launcher** — `run.py` / `start.bat` to switch between the web (Flask) and Streamlit UIs.  
+✅ **Repo tidy** — historical Stitch mockups, design notes, and the standalone shader moved under `docs/design/`; `UI/` now holds only what the app serves (`index.html` + `animated_background/white.mp4`).  
 
-**UI note:** the **Flask web app (`UI/index.html`)** is now the primary front end; **Streamlit (`app.py`)** is kept as the lightweight testing UI. The liquid-glass mockups under `UI/` were merged into the single-page app.  
+### **What's Next (Week 4 - deploy + docs):**
+⏳ Wire **custom resources** into the RAG corpus (still client-side only) — or formally scope it as a study locker  
+⏳ **ADRs** (≥3): grounded grading vs. free LLM judgment, fully-local vs. API, chunking strategy  
+⏳ **Deploy** via ngrok / Cloudflare tunnel (local machine + public URL)  
+⏳ **Loom** walkthrough + **reflection piece** (1000–1500 words)  
+
+**UI note:** the **Flask web app (`UI/index.html`)** is the primary front end; **Streamlit (`app.py`)** is a full alternate UI (switch via `run.py`). The original Stitch mockups now live under `docs/design/mockups/`.  
 
 ---
 
@@ -482,8 +490,12 @@ The feedback cites the actual OSTEP page — the core payoff of grounding gradin
 | Jul 6 | Adaptive glass lighting (background-agnostic reflections) | ✅ Done |
 | Jul 6 | Styled error popups + grading-bar fixes | ✅ Done |
 | Jul 6 | Functional navbar (History / Resources / Settings / Account) | ✅ Done |
-| **Next** | **Tests + wire custom resources into RAG (Week 3)** | ⏳ Pending |
-| **Next** | **Optional: difficulty selector affecting grading** | ⏳ Pending |
+| Jul (wk3) | DSA as Subject #2 — multi-subject pipeline, per-subject collections | ✅ Done |
+| Jul (wk3) | Topic selection screen + difficulty levels; OS expanded to 6 topics | ✅ Done |
+| Jul (wk3) | Weakness report (Strengths & gaps by topic) on History page | ✅ Done |
+| Jul (wk3) | Tests: evaluate (schema/parse) + retrieve (right section), 14 passing | ✅ Done |
+| Jul (wk3) | Launcher (`run.py`/`start.bat`); repo tidy (design artifacts → docs/design) | ✅ Done |
+| **Next** | **Custom resources → RAG (or scope it) · ADRs · deploy · Loom · reflection (Week 4)** | ⏳ Pending |
 
 ---
 
@@ -539,4 +551,4 @@ The feedback cites the actual OSTEP page — the core payoff of grounding gradin
 ---
 
 **End of Progress Summary**  
-*Steps 2.6 (Flask backend) + 2.7 (liquid-glass web app) complete — MockMentor now ships a polished single-page web front end backed by the local RAG pipeline, with a functional navbar, adaptive glass UI, and styled error handling. Next up: Week 3 hardening (tests, wire custom resources into the corpus, optional difficulty selector).*
+*Weeks 1–3 complete: full local RAG loop, a polished Flask + liquid-glass web app (plus a Streamlit alternate), and the DSA mini-extension proving the pipeline generalizes to a second subject. Added topic selection with difficulty levels, a per-topic weakness report, and a passing test suite; the repo was tidied (design artifacts archived under `docs/design/`). Next up: Week 4 — wire (or scope) custom resources, write ADRs, deploy via tunnel, and record the Loom + reflection.*
