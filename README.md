@@ -20,7 +20,7 @@ This project is built under **Segment 3 — Foundations of Applied Machine Learn
 
 ## 3. Architecture
 
-> 🚧 **Diagram pending.** A C4 Level 1 architecture diagram will be added to `/docs` once the core pipeline (Weeks 1-2) is complete. High-level flow in the meantime:
+Full diagrams (C4 Level 1 system context + component/data-flow) are in [`docs/architecture.md`](./docs/architecture.md). High-level flow:
 
 ```
 User Question
@@ -177,14 +177,15 @@ Two suites (14 tests):
 
 ## 7. Architecture Decision Records (ADRs)
 
-See [`/docs/adr`](./docs/adr/). Minimum 3 required by Week 4; in progress:
+See [`/docs/adr`](./docs/adr/). Minimum 3 required by Week 4:
 
-- [ ] ADR-001: Grounded grading (retrieved chunks as ground truth, not the LLM's own judgment)
-- [ ] ADR-002: Fully local stack (Ollama) over a paid API
-- [ ] ADR-003: Chunking strategy (window size, overlap)
-- [ ] ADR-004 *(optional)*: OS-first, DSA-as-extension sequencing
+- [x] [ADR-001](./docs/adr/ADR-001-grounded-grading.md): Grounded grading (retrieved chunks as ground truth, not the LLM's own judgment)
+- [x] [ADR-002](./docs/adr/ADR-002-fully-local-stack.md): Fully local stack (Ollama) over a paid API
+- [x] [ADR-003](./docs/adr/ADR-003-chunking-strategy.md): Chunking strategy (window size, overlap)
+- [x] [ADR-004](./docs/adr/ADR-004-os-first-dsa-extension.md): OS-first, DSA-as-extension sequencing
+- [x] [ADR-005](./docs/adr/ADR-005-deployment-local-run.md): Distribute as a local run, not a hosted deployment
 
-**Design Doc:** Not yet added to the repo. Original 1-page design doc was submitted 24 June per internship requirements; the final version (post mentor review) will be added at `docs/design_doc.md` before Week 1 submission.
+**Design Doc:** [`docs/design_doc.md`](./docs/design_doc.md) — the as-built version, reconciled with what shipped (the original 1-page doc was submitted 24 June per internship requirements).
 
 ---
 
@@ -210,7 +211,7 @@ See [`/docs/adr`](./docs/adr/). Minimum 3 required by Week 4; in progress:
 - Project is in early stages (Week 1 of 5) — most components are still in active development.
 - Local LLM (Qwen3 8B) has less reasoning depth than larger hosted models; grading quality on ambiguous or partially-correct answers may be less consistent than a frontier-scale model.
 - Corpus is intentionally scoped to 5 chapters of one textbook, not the full subject — by design, to keep retrieval focused and the project deliverable within a 5-week timeline.
-- Live deployment will run via a local-machine + tunnel setup (ngrok/Cloudflare Tunnel), not an always-on cloud host — the link will only be reachable while the developer's machine is running. Documented as an accepted deployment path for fully-local LLM projects in this internship's workflow guide.
+- There is no always-on hosted URL. A fully-local LLM needs a GPU (no free cloud tier hosts it) and keeping a personal laptop online 24/7 isn't practical here, so MockMentor is distributed as a **one-command local run** (`start.bat` self-bootstraps the venv + dependencies) rather than a hosted service. A recorded walkthrough can stand in as proof-of-function for anyone who can't run it locally. Full reasoning in [ADR-005](./docs/adr/ADR-005-deployment-local-run.md).
 
 ---
 
