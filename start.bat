@@ -88,6 +88,16 @@ echo   Starting MockMentor  ^-^>  http://localhost:5000
 echo   ^(Ctrl+C to stop^)
 echo ============================================
 echo.
+echo [MockMentor] Loading the embedding model - this takes ~10-15 seconds on
+echo             the first start. Your browser will open automatically when the
+echo             server is ready. Please wait...
+echo.
+
+REM Open the browser automatically once the server has had time to load the
+REM model and start listening. This runs in a detached child so it fires while
+REM the (blocking) server call below keeps the window alive. If the page shows
+REM "can't connect" for a second, just refresh - the server is still loading.
+start "" /b cmd /c "timeout /t 15 >nul & start "" http://localhost:5000"
 
 "%VENV_PY%" src\server.py
 
